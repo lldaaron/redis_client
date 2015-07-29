@@ -3,11 +3,12 @@ package com.didapinche.commons.redis;
 import com.didapinche.commons.redis.exceptions.DiDaRedisClientException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import redis.clients.jedis.*;
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.ShardedJedis;
 
 
 /**
- * MasterSlaveRedisClient.java
+ * MuiltRedisClient.java
  * Project: redis client
  *
  * File Created at 2015-7-28 by fengbin
@@ -21,14 +22,14 @@ public final class MasterSlaveRedisClient extends AbstractRedisClient{
     private MasterSlaveRedisPool pool;
 
 
-    protected  <T> T execute(AbstractRedisClient.CallBack<T> callBack) {
+    protected  <T> T execute(CallBack<T> callBack) {
         return execute(callBack,false);
     }
 
-    protected <T> T execute(AbstractRedisClient.CallBack<T> callBack,boolean readonly){
+    protected <T> T execute(CallBack<T> callBack,boolean readonly){
         return execute(callBack,readonly,0);
     }
-    protected <T> T execute(AbstractRedisClient.CallBack<T> callBack,boolean readonly,int retryTimes){
+    protected <T> T execute(CallBack<T> callBack,boolean readonly,int retryTimes){
 
         retryTimes ++;
 
@@ -38,50 +39,35 @@ public final class MasterSlaveRedisClient extends AbstractRedisClient{
             throw new DiDaRedisClientException("have retried 3 times for redis command");
         }
 
-        if (pool.getJedisPool() != null ) {
+       if (readonly && autoReadFromSlave && pool.getMasterJedisPool()!= null) {
             Jedis jedis = null;
 
             try {
-                jedis = pool.getResource();
+                jedis = pool.getSlaveResource();
                 return callBack.execute(jedis);
             }catch (Exception e){
                 logger.error(e.getMessage(),e);
                 return execute(callBack,readonly,retryTimes);
             }finally {
                 if(jedis != null) {
-                    pool.returnResourceObject(jedis);
+                    pool.returnSlaveResourceObject(jedis);
                 }
             }
 
-        } else if (readonly && autoReadFromSlave && pool.getSlaveShardedJedisPool() != null) {
-            ShardedJedis shardedJedis = null;
+        } else if (pool.getSlaveJedisPool() != null) {
+
+            Jedis jedis = null;
 
             try {
-                shardedJedis = pool.getSlaveResource();
-                return callBack.execute(shardedJedis);
-            }catch (Exception e){
-                logger.error(e.getMessage(),e);
-                return execute(callBack,readonly,retryTimes);
-            }finally {
-                if(shardedJedis != null) {
-                    pool.returnSlaveResourceObject(shardedJedis);
-                }
-            }
-
-        } else if (pool.getMasterShardedJedisPool() != null) {
-
-            ShardedJedis shardedJedis = null;
-
-            try {
-                shardedJedis = pool.getMasterResource();
-                T result = callBack.execute(shardedJedis);
+                jedis = pool.getMasterResource();
+                T result = callBack.execute(jedis);
                 return result;
             }catch (Exception e){
                 logger.error(e.getMessage(),e);
                 return execute(callBack,readonly,retryTimes);
             }finally {
-                if(shardedJedis != null) {
-                    pool.returnMasterResourceObject(shardedJedis);
+                if(jedis != null) {
+                    pool.returnMasterResourceObject(jedis);
                 }
             }
 
