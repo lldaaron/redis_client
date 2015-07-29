@@ -4,15 +4,24 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <parent>
-        <groupId>com.didapinche</groupId>
-        <artifactId>com.didapinche.commons</artifactId>
-        <version>1.4.5</version>
-    </parent>
     <artifactId>com.didapinche.commons.redis</artifactId>
 	<name>com.didapinche.commons.redis</name>
+	<groupId>com.didapinche</groupId>
 	<description>com.didapinche.commons.redis</description>
     <version>1.4.6-SNAPSHOT</version>
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.build.sourcejvm>1.7</project.build.sourcejvm>
+        <project.build.targetjvm>1.7</project.build.targetjvm>
+        <jackson.version>2.2.3</jackson.version>
+        <springframework.version>3.2.5.RELEASE</springframework.version>
+        <activemq.version>5.7.0</activemq.version>
+        <zxing.version>2.3.0</zxing.version>
+        <jmail.version>1.4.7</jmail.version>
+        <dbcp.version>1.4</dbcp.version>
+        <dom4j.version>1.6.1</dom4j.version>
+    </properties>
+
 
     <dependencyManagement>
         <dependencies>
@@ -50,6 +59,24 @@
 
             </dependency>
 
+
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-api</artifactId>
+                <version>1.7.6</version>
+            </dependency>
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-log4j12</artifactId>
+                <version>1.7.6</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>log4j</groupId>
+                <artifactId>log4j</artifactId>
+                <version>1.2.17</version>
+                <scope>test</scope>
+            </dependency>
             <dependency>
                 <groupId>junit</groupId>
                 <artifactId>junit</artifactId>
@@ -80,6 +107,19 @@
             <groupId>org.springframework</groupId>
             <artifactId>spring-test</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
