@@ -4,15 +4,16 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <parent>
-        <groupId>com.didapinche</groupId>
-        <artifactId>com.didapinche.commons</artifactId>
-        <version>1.4.5</version>
-    </parent>
+    <groupId>com.didapinche</groupId>
+
     <artifactId>com.didapinche.commons.redis</artifactId>
 	<name>com.didapinche.commons.redis</name>
 	<description>com.didapinche.commons.redis</description>
     <version>1.4.6-SNAPSHOT</version>
+
+    <properties>
+        <springframework.version>3.0.5.RELEASE</springframework.version>
+    </properties>
 
     <dependencyManagement>
         <dependencies>
@@ -56,6 +57,12 @@
                 <version>4.12</version>
                 <scope>test</scope>
             </dependency>
+
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-api</artifactId>
+                <version>1.7.12</version>
+            </dependency>
         </dependencies>
 
     </dependencyManagement>
@@ -83,6 +90,10 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
         </dependency>
     </dependencies>
 
