@@ -56,7 +56,7 @@ import java.util.*;
  */
 public class RedisSentinelPool implements InitializingBean {
     private static final Logger logger = LoggerFactory.getLogger(SentinelRedisClient.class);
-    //纪录线程池
+    //记录当前线程使用的线程池，方便释放资源
     private ThreadLocal<ShardedJedisPool> slavePoolTh = new ThreadLocal();
 
 

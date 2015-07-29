@@ -10,13 +10,7 @@ import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
  */
 
 @ContextConfiguration(locations = {"classpath*:spring.xml"})
-public class RedisTest extends AbstractJUnit4SpringContextTests {
-
-    @Autowired
-    MasterSlaveRedisClient redisClient;
-
-    @Autowired
-    private SentinelRedisClient redisSentinelClient;
+public class RedisTest extends RedisTestBase {
 
     @Test
     public void testRedisTemp(){
