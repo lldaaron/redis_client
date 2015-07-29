@@ -1,0 +1,8 @@
+/target
+/src/main/java/com/didapinche/commons/redis/plugins
+/.settings
+/.project
+/.classpath
+/*.iml
+/.idea
+/.svn
