@@ -346,4 +346,20 @@ public class RedisSentinelPool implements InitializingBean {
     public void setJedisPoolConfig(JedisPoolConfig jedisPoolConfig) {
         this.jedisPoolConfig = jedisPoolConfig;
     }
+
+    public Map<String, JedisShardInfo> getMasterShards() {
+        return masterShards;
+    }
+
+    public void setMasterShards(Map<String, JedisShardInfo> masterShards) {
+        this.masterShards = masterShards;
+    }
+
+    public Map<String, List<JedisShardInfo>> getMultiSlaveShards() {
+        return multiSlaveShards;
+    }
+
+    public void setMultiSlaveShards(Map<String, List<JedisShardInfo>> multiSlaveShards) {
+        this.multiSlaveShards = multiSlaveShards;
+    }
 }

@@ -17,7 +17,7 @@ public class RedisTestBase extends AbstractJUnit4SpringContextTests {
 
 
     @Autowired
-    protected MasterSlaveRedisClient redisClient;
+    protected MuiltRedisClient redisClient;
 
     @Autowired
     protected SentinelRedisClient redisSentinelClient;

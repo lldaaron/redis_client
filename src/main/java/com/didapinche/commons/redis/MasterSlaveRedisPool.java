@@ -4,12 +4,11 @@ import org.springframework.beans.factory.InitializingBean;
 import redis.clients.jedis.*;
 
 import java.util.List;
-import java.util.Random;
 
 /**
- * MasterSlaveRedisPool.java
+ * MuiltRedisPool.java
  * ex:
- *   <bean id="redisPool" class="com.didapinche.commons.redis.MasterSlaveRedisPool">
+ *   <bean id="redisPool" class="com.didapinche.commons.redis.MuiltRedisPool">
  *      <property name="jedisPoolConfig" ref="jedisPoolConfig"></property>
  *      <property name="masterShards">
  *           <list>
@@ -38,69 +37,31 @@ public class MasterSlaveRedisPool implements InitializingBean{
     private JedisPoolConfig jedisPoolConfig;
 
 
-    private JedisPool jedisPool;
-
-    private List<JedisShardInfo> masterShards;
-    private List<JedisShardInfo> slaveShards;
-
-    private ShardedJedisPool masterShardedJedisPool;
-    private ShardedJedisPool slaveShardedJedisPool;
+    private JedisPool masterJedisPool;
+    private JedisPool slaveJedisPool;
 
 
-    public Jedis getResource(){
-        return jedisPool.getResource();
+    public Jedis getMasterResource(){
+        return masterJedisPool.getResource();
     }
-
-    public void returnResourceObject(Jedis jedis){
-        jedisPool.returnResourceObject(jedis);
-    }
-
-    public ShardedJedis getMasterResource(){
-        return masterShardedJedisPool.getResource();
-    }
-    public void returnMasterResourceObject(ShardedJedis jedis) {
-        masterShardedJedisPool.returnResourceObject(jedis);
+    public void returnMasterResourceObject(Jedis jedis) {
+        masterJedisPool.returnResourceObject(jedis);
     }
 
 
-    public ShardedJedis getSlaveResource(){
-        return slaveShardedJedisPool.getResource();
+    public Jedis getSlaveResource(){
+        return slaveJedisPool.getResource();
     }
 
-    public void returnSlaveResourceObject(ShardedJedis jedis) {
-        slaveShardedJedisPool.returnResourceObject(jedis);
+    public void returnSlaveResourceObject(Jedis jedis) {
+        slaveJedisPool.returnResourceObject(jedis);
     }
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        if( masterShards != null ) {
-            masterShardedJedisPool = new ShardedJedisPool(jedisPoolConfig,masterShards);
-        }
 
-        if( slaveShards != null ) {
-            slaveShardedJedisPool = new ShardedJedisPool(jedisPoolConfig,slaveShards);
-        }
     }
 
-    public void setJedisPool(JedisPool jedisPool) {
-        this.jedisPool = jedisPool;
-    }
-
-    public void setMasterShards(List<JedisShardInfo> masterShards) {
-        this.masterShards = masterShards;
-    }
-
-    public void setSlaveShards(List<JedisShardInfo> slaveShards) {
-        this.slaveShards = slaveShards;
-    }
-
-    public void setMasterShardedJedisPool(ShardedJedisPool masterShardedJedisPool) {
-        this.masterShardedJedisPool = masterShardedJedisPool;
-    }
-
-    public void setSlaveShardedJedisPool(ShardedJedisPool slaveShardedJedisPool) {
-        this.slaveShardedJedisPool = slaveShardedJedisPool;
-    }
 
     public void setJedisPoolConfig(JedisPoolConfig jedisPoolConfig) {
         this.jedisPoolConfig = jedisPoolConfig;
@@ -111,23 +72,19 @@ public class MasterSlaveRedisPool implements InitializingBean{
         return jedisPoolConfig;
     }
 
-    public JedisPool getJedisPool() {
-        return jedisPool;
+    public JedisPool getMasterJedisPool() {
+        return masterJedisPool;
     }
 
-    public List<JedisShardInfo> getMasterShards() {
-        return masterShards;
+    public void setMasterJedisPool(JedisPool masterJedisPool) {
+        this.masterJedisPool = masterJedisPool;
     }
 
-    public List<JedisShardInfo> getSlaveShards() {
-        return slaveShards;
+    public JedisPool getSlaveJedisPool() {
+        return slaveJedisPool;
     }
 
-    public ShardedJedisPool getMasterShardedJedisPool() {
-        return masterShardedJedisPool;
-    }
-
-    public ShardedJedisPool getSlaveShardedJedisPool() {
-        return slaveShardedJedisPool;
+    public void setSlaveJedisPool(JedisPool slaveJedisPool) {
+        this.slaveJedisPool = slaveJedisPool;
     }
 }
