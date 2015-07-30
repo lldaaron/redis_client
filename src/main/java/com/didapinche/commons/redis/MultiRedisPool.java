@@ -167,17 +167,14 @@ public class MultiRedisPool implements RedisPool<ShardedJedis>, InitializingBean
 
 
     @Override
-    public void buildMasterSlaveInfo(String masterName, HostAndPort masterInfo, List<Map<String, String>> slaveInfos) {
+    public void buildMasterSlaveInfo(String masterName, HostAndPort masterInfo, List<HostAndPort> slaveHaps) {
         buildMasterShardInfos(masterName,masterInfo);
 
         List<JedisShardInfo> jedisShardInfos= new ArrayList<>();
 
-        for(Map<String,String>slaveInfo : slaveInfos) {
+        for(HostAndPort slaveHap : slaveHaps) {
 
-            String host = slaveInfo.get("ip");
-            String port = slaveInfo.get("port");
-
-            JedisShardInfo slaveShardInfo = new JedisShardInfo(host,Integer.parseInt(port));
+            JedisShardInfo slaveShardInfo = new JedisShardInfo(slaveHap.getHost(), slaveHap.getPort());
 
             jedisShardInfos.add(slaveShardInfo);
         }
