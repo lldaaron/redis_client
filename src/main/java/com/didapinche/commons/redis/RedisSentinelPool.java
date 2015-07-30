@@ -1,5 +1,6 @@
 package com.didapinche.commons.redis;
 
+import com.didapinche.commons.redis.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -72,7 +73,7 @@ public class RedisSentinelPool implements InitializingBean {
     private List<ShardedJedisPool> slaveShardedJedisPools = new ArrayList<>();
 
     //监听redisSentinel
-    private Set<MasterListener> masterListeners = new HashSet<MasterListener>();
+    private Set<com.didapinche.commons.redis.MasterListener> masterListeners = new HashSet<com.didapinche.commons.redis.MasterListener>();
 
 
     @Override
@@ -189,7 +190,7 @@ public class RedisSentinelPool implements InitializingBean {
 
         for (String sentinel : sentinels) {
             final HostAndPort hap = toHostAndPort(Arrays.asList(sentinel.split(":")));
-            MasterListener masterListener = new MasterListener(masterName, hap.getHost(), hap.getPort(),this);
+            com.didapinche.commons.redis.MasterListener masterListener = new com.didapinche.commons.redis.MasterListener(masterName, hap.getHost(), hap.getPort(),this);
             masterListeners.add(masterListener);
             masterListener.start();
         }

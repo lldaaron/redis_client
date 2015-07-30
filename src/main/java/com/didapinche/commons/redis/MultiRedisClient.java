@@ -15,7 +15,7 @@ import redis.clients.jedis.ShardedJedis;
 public final class MultiRedisClient extends AbstractRedisClient{
 
     private static Logger logger = LoggerFactory.getLogger(MultiRedisClient.class);
-    private RedisSentinelPool  redisSentinelPool;
+    private RedisSentinelPool redisSentinelPool;
 
     @Override
     protected <T> T execute(CallBack<T> callBack) {

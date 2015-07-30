@@ -4,7 +4,6 @@ import org.junit.Assert;
 import org.junit.Test;
 import redis.clients.jedis.JedisShardInfo;
 import redis.clients.jedis.ShardedJedis;
-import redis.clients.util.ShardInfo;
 
 import java.util.*;
 
@@ -97,7 +96,7 @@ public class RedisSentinelTest extends RedisTestBase {
             String masterMasterName = masterSearchMap.get(masterShardInfo .getHost() + ":" + masterShardInfo.getPort());
             String slaveMasterName = masterSearchMap.get(slaveShardInfo .getHost() + ":" + slaveShardInfo.getPort());
 
-            Assert.assertEquals(masterMasterName,slaveMasterName);
+            Assert.assertEquals(masterMasterName, slaveMasterName);
 
         }
 

@@ -157,7 +157,6 @@ public class MultiRedisPool implements InitializingBean {
 
 
     public  void initPool(){
-
         initPool(new ArrayList<JedisShardInfo>(masterShards.values()),multiSlaveShards);
     }
 
@@ -172,7 +171,7 @@ public class MultiRedisPool implements InitializingBean {
 
     public void switchMaster(String masterName, HostAndPort masterInfo){
 
-        buildMasterShardInfos(masterName,masterInfo);
+        buildMasterShardInfos(masterName, masterInfo);
         initMasterPool(new ArrayList<JedisShardInfo>(masterShards.values()));
 
     }

@@ -1,9 +1,11 @@
 package com.didapinche.commons.redis;
 
+import com.didapinche.commons.redis.sentinel.SentinelActor;
 import org.springframework.beans.factory.InitializingBean;
 import redis.clients.jedis.*;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * MuiltRedisPool.java
@@ -33,7 +35,7 @@ import java.util.List;
  *
  * Copyright 2015 didapinche.com
  */
-public class MasterSlaveRedisPool implements InitializingBean{
+public class MasterSlaveRedisPool implements ReidsPool<Jedis>,InitializingBean{
     private JedisPoolConfig jedisPoolConfig;
 
 
@@ -41,18 +43,62 @@ public class MasterSlaveRedisPool implements InitializingBean{
     private JedisPool slaveJedisPool;
 
 
+
+
+    @Override
+    public void initPool() {
+
+    }
+
+    @Override
+    public void initMasterPool() {
+
+    }
+
+    @Override
+    public void initSlavePool() {
+
+    }
+
+    @Override
+    public boolean hasSlave() {
+        return false;
+    }
+
+    @Override
+    public void switchMaster(String masterName, HostAndPort newMasterHostAndPort) {}
+
+
+
+    @Override
+    public void sdownSlave(String masterName, HostAndPort hostAndPort) {
+
+    }
+
+    @Override
+    public void nsdownSlave(String masterName, HostAndPort hostAndPort) {
+
+    }
+
+    @Override
+    public void buildMasterSlaveInfo(String masterName, HostAndPort masterInfo, List<Map<String, String>> slaveInfos) {
+
+    }
+    @Override
     public Jedis getMasterResource(){
         return masterJedisPool.getResource();
     }
+    @Override
     public void returnMasterResourceObject(Jedis jedis) {
         masterJedisPool.returnResourceObject(jedis);
     }
 
-
+    @Override
     public Jedis getSlaveResource(){
         return slaveJedisPool.getResource();
     }
 
+    @Override
     public void returnSlaveResourceObject(Jedis jedis) {
         slaveJedisPool.returnResourceObject(jedis);
     }
@@ -87,4 +133,7 @@ public class MasterSlaveRedisPool implements InitializingBean{
     public void setSlaveJedisPool(JedisPool slaveJedisPool) {
         this.slaveJedisPool = slaveJedisPool;
     }
+
+
+
 }

@@ -1,5 +1,6 @@
 package com.didapinche.commons.redis;
 
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -11,6 +12,8 @@ import java.util.Set;
  * Copyright 2015 didapinche.com
  */
 public class SentinelInfo {
+
+    private List<String> masterNames;
 
     private Set<String> sentinels;
 
@@ -45,4 +48,11 @@ public class SentinelInfo {
     }
 
 
+    public List<String> getMasterNames() {
+        return masterNames;
+    }
+
+    public void setMasterNames(List<String> masterNames) {
+        this.masterNames = masterNames;
+    }
 }
