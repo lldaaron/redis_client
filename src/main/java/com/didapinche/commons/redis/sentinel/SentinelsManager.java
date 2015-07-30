@@ -22,7 +22,7 @@ public class SentinelsManager {
 
     private SentinelInfo sentinelInfo;
 
-    private ReidsPool reidsPool;
+    private RedisPool reidsPool;
     /**
      * 初始化一组sentinel监听服务，之后初始化master连接池和slave连接池
      * @return
@@ -88,9 +88,12 @@ public class SentinelsManager {
                 }
             }
 
+            //构建一个masterName
             reidsPool.buildMasterSlaveInfo(masterName, master, slaveInfo);
         }
 
+        //初始化线程池
+        reidsPool.initPool();
 
 
 
@@ -103,7 +106,6 @@ public class SentinelsManager {
             new Thread(masterListener).start();
         }
 
-        reidsPool.initPool();
     }
 
     public void shutdownSentinels(){
@@ -113,11 +115,11 @@ public class SentinelsManager {
     }
 
 
-    public ReidsPool getReidsPool() {
+    public RedisPool getReidsPool() {
         return reidsPool;
     }
 
-    public void setReidsPool(ReidsPool reidsPool) {
+    public void setReidsPool(RedisPool reidsPool) {
         this.reidsPool = reidsPool;
     }
 

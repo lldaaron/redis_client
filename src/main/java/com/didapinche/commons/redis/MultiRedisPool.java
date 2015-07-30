@@ -4,8 +4,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import redis.clients.jedis.*;
-import redis.clients.jedis.exceptions.JedisConnectionException;
-import redis.clients.jedis.exceptions.JedisException;
 
 import java.util.*;
 
@@ -54,7 +52,7 @@ import java.util.*;
  *
  * Copyright 2015 didapinche.com
  */
-public class MultiRedisPool implements ReidsPool<ShardedJedis>, InitializingBean {
+public class MultiRedisPool implements RedisPool<ShardedJedis>, InitializingBean {
     private static final Logger logger = LoggerFactory.getLogger(MultiRedisPool.class);
     //记录当前线程使用的线程池，方便释放资源
     private ThreadLocal<ShardedJedisPool> slavePoolTh = new ThreadLocal();
@@ -108,6 +106,19 @@ public class MultiRedisPool implements ReidsPool<ShardedJedis>, InitializingBean
         slavePoolTh.get().returnResourceObject(jedis);
     }
 
+    @Override
+    public  void initPool(){
+        initMasterPool();
+
+        initSlavePool();
+    }
+
+
+
+    @Override
+    public void initMasterPool() {
+        initMasterPool(new ArrayList<JedisShardInfo>(masterShards.values()));
+    }
 
     private void initMasterPool(List<JedisShardInfo> masterShards) {
         if( masterShards != null && masterShards.size() > 0) {
@@ -120,10 +131,6 @@ public class MultiRedisPool implements ReidsPool<ShardedJedis>, InitializingBean
     public  void initSlavePool(){
         initSlavePool(multiSlaveShards);
     }
-
-
-
-
 
 
     private void initSlavePool(Map<String,List<JedisShardInfo>> multiSlaveShards) {
@@ -155,22 +162,8 @@ public class MultiRedisPool implements ReidsPool<ShardedJedis>, InitializingBean
     }
 
 
-    @Override
-    public  void initPool(){
-        initPool(new ArrayList<JedisShardInfo>(masterShards.values()),multiSlaveShards);
-    }
 
-    @Override
-    public void initMasterPool() {
 
-    }
-
-    private void initPool(List<JedisShardInfo> masterShards,Map<String,List<JedisShardInfo>> multiSlaveShards){
-
-        initMasterPool(masterShards);
-
-        initSlavePool(multiSlaveShards);
-    }
 
 
     @Override
