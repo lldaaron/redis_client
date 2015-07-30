@@ -6,11 +6,10 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.util.CollectionUtils;
 import redis.clients.jedis.*;
 
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * 单主多从的资源池
@@ -22,8 +21,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  *
  * Copyright 2015 didapinche.com
  *
- * modified by 罗立东 rod
- * @time 15/7/30
+ * modified at 15/7/30 by 罗立东 rod
  */
 public class MasterSlaveRedisPool implements RedisPool<Jedis>, InitializingBean {
 

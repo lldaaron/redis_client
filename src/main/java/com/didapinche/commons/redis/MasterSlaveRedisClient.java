@@ -13,6 +13,8 @@ import redis.clients.jedis.Jedis;
  * File Created at 2015-7-28 by fengbin
  * <p/>
  * Copyright 2015 didapinche.com
+ *
+ * modified at 15/7/30 by 罗立东 rod
  */
 public final class MasterSlaveRedisClient extends AbstractRedisClient {
     private static final Logger logger = LoggerFactory.getLogger(MasterSlaveRedisClient.class);
@@ -107,6 +109,8 @@ public final class MasterSlaveRedisClient extends AbstractRedisClient {
             }
         }
     }
+
+
 
 
     public void setAutoReadFromSlave(boolean autoReadFromSlave) {

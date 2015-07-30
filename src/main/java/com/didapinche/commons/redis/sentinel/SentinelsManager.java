@@ -14,16 +14,27 @@ import redis.clients.jedis.exceptions.JedisException;
 import java.util.*;
 
 /**
- * Created by fengbin on 15/7/30.
+ * RedisClientException.java
+ * Project: redis client
+ *
+ * File Created at 2015-7-30 by fengbin
+ *
+ * Copyright 2015 didapinche.com
  */
 public class SentinelsManager implements InitializingBean{
     private static final Logger logger = LoggerFactory.getLogger(SentinelsManager.class);
 
-    //监听redisSentinel
+    /**
+     * 监听redisSentinel
+     */
     private Set<MasterListener> masterListeners = new HashSet<MasterListener>();
-
+    /**
+     * sentinel 配置信息
+     */
     private SentinelInfo sentinelInfo;
-
+    /**
+     * 连接池
+     */
     private RedisPool reidsPool;
     /**
      * 初始化一组sentinel监听服务，之后初始化master连接池和slave连接池
@@ -36,7 +47,7 @@ public class SentinelsManager implements InitializingBean{
 
         HostAndPort master = null;
         List<Map<String,String>>  slaveInfos = null;
-        List<HostAndPort> slaveHaps = new ArrayList<>();
+        List<HostAndPort> slaveHaps = null;
         boolean sentinelAvailable = false;
 
         logger.info("Trying to find master from available Sentinels...");
@@ -55,8 +66,14 @@ public class SentinelsManager implements InitializingBean{
                     List<String> masterAddr = jedis.sentinelGetMasterAddrByName(masterName);
                     slaveInfos = jedis.sentinelSlaves(masterName);
 
+                    slaveHaps = new ArrayList<>();
                     for(Map<String,String>slaveInfo : slaveInfos) {
 
+                        //下线状态的slave也会查出来，跳过下线状态的
+                        String sdownTime = slaveInfo.get("s-down-time");
+                        if(!(sdownTime == null || "0".equals(sdownTime))){
+                            continue;
+                        }
                         String host = slaveInfo.get("ip");
                         String port = slaveInfo.get("port");
                         HostAndPort hostAndPort = new HostAndPort(host, Integer.parseInt(port));
@@ -92,9 +109,11 @@ public class SentinelsManager implements InitializingBean{
                 if (sentinelAvailable) {
                     // can connect to sentinel, but master name seems to not
                     // monitored
+                    this.shutdownSentinels();
                     throw new JedisException("Can connect to sentinel, but " + masterName
                             + " seems to be not monitored...");
                 } else {
+                    this.shutdownSentinels();
                     throw new JedisConnectionException("All sentinels down, cannot determine where is "
                             + masterName + " master is running...");
                 }

@@ -9,42 +9,6 @@ import java.util.*;
 
 /**
  * RedisSentinelPool.java
- * ex:
- *<bean id ="redisSentinelPool" class="com.didapinche.commons.redis.RedisSentinelPool">
- *    <property name="jedisPoolConfig" ref="jedisPoolConfig"></property>
- *
- *    <property name="sentinelShards">
- *        <map >
- *            <entry key="master1">
- *                <bean class="com.didapinche.commons.redis.sentinel.SentinelInfo">
- *                    <property name="sentinels">
- *                        <set>
- *                            <value>127.0.0.1:26379</value>
- *                            <value>127.0.0.1:26380</value>
- *                            <value>127.0.0.1:26381</value>
- *                        </set>
- *                        </property>
- *                        <property name="weight" value="1"></property>
- *                        <property name="password" value="" ></property>
- *                </bean>
- *            </entry>
- *
- *            <entry key="master2">
- *                <bean class="com.didapinche.commons.redis.sentinel.SentinelInfo">
- *                    <property name="sentinels">
- *                        <set>
- *                            <value>127.0.0.1:26379</value>
- *                            <value>127.0.0.1:26380</value>
- *                            <value>127.0.0.1:26381</value>
- *                        </set>
- *                    </property>
- *                    <property name="weight" value="1"></property>
- *                    <property name="password" value="" ></property>
- *                </bean>
- *            </entry>
- *        </map>
- *    </property>
- *</bean>
  *
  * Project: redis client
  *
@@ -54,9 +18,6 @@ import java.util.*;
  */
 public class MatrixRedisPool implements RedisPool<ShardedJedis>, InitializingBean {
     private static final Logger logger = LoggerFactory.getLogger(MatrixRedisPool.class);
-    //记录当前线程使用的线程池，方便释放资源
-    private ThreadLocal<ShardedJedisPool> slavePoolTh = new ThreadLocal();
-
 
     private JedisPoolConfig jedisPoolConfig;
 
@@ -71,7 +32,6 @@ public class MatrixRedisPool implements RedisPool<ShardedJedis>, InitializingBea
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        initPool();
     }
 
 
@@ -87,7 +47,7 @@ public class MatrixRedisPool implements RedisPool<ShardedJedis>, InitializingBea
 
     @Override
     public void returnMasterResourceObject(ShardedJedis jedis) {
-        masterShardedJedisPool.returnResourceObject(jedis);
+        jedis.close();
     }
 
     @Override
@@ -95,7 +55,6 @@ public class MatrixRedisPool implements RedisPool<ShardedJedis>, InitializingBea
 
         int index = new Random().nextInt(slaveShardedJedisPools.size());
         ShardedJedisPool pool = slaveShardedJedisPools.get(index);
-        slavePoolTh.set(pool);
 
         return pool.getResource();
     }
@@ -103,7 +62,7 @@ public class MatrixRedisPool implements RedisPool<ShardedJedis>, InitializingBea
 
     @Override
     public void returnSlaveResourceObject(ShardedJedis jedis) {
-        slavePoolTh.get().returnResourceObject(jedis);
+        jedis.close();
     }
 
     @Override
@@ -120,7 +79,7 @@ public class MatrixRedisPool implements RedisPool<ShardedJedis>, InitializingBea
         initMasterPool(new ArrayList<JedisShardInfo>(masterShards.values()));
     }
 
-    private void initMasterPool(List<JedisShardInfo> masterShards) {
+    private synchronized void initMasterPool(List<JedisShardInfo> masterShards) {
         if( masterShards != null && masterShards.size() > 0) {
             masterShardedJedisPool = new ShardedJedisPool(jedisPoolConfig,masterShards);
         }
@@ -133,7 +92,7 @@ public class MatrixRedisPool implements RedisPool<ShardedJedis>, InitializingBea
     }
 
 
-    private void initSlavePool(Map<String,List<JedisShardInfo>> multiSlaveShards) {
+    private synchronized void  initSlavePool(Map<String,List<JedisShardInfo>> multiSlaveShards) {
         if( multiSlaveShards != null && multiSlaveShards.size() > 0) {
             for(ShardedJedisPool pool:slaveShardedJedisPools){
                 pool.destroy();
@@ -141,13 +100,19 @@ public class MatrixRedisPool implements RedisPool<ShardedJedis>, InitializingBea
 
             slaveShardedJedisPools.clear();
 
-            int i = 0;
-            while (true) {
-                List<JedisShardInfo> slaveShards = new ArrayList<JedisShardInfo>();
+
+            List<JedisShardInfo> slaveShards = new ArrayList<JedisShardInfo>();
+
+            int count = Integer.MAX_VALUE;
+            for(String masterName:multiSlaveShards.keySet()) {
+                List<JedisShardInfo> shardInfos = multiSlaveShards.get(masterName);
+                count = Math.min(shardInfos.size(),count);
+            }
+
+            for(int i = 0; i < count; i++){
                 for(String masterName:multiSlaveShards.keySet()){
                     List<JedisShardInfo> shardInfos = multiSlaveShards.get(masterName);
 
-                    if(i >= shardInfos.size() ) return;
 
                     JedisShardInfo shardInfo = shardInfos.get(i);
                     slaveShards.add(shardInfo);
@@ -155,7 +120,6 @@ public class MatrixRedisPool implements RedisPool<ShardedJedis>, InitializingBea
                 }
 
                 slaveShardedJedisPools.add(new ShardedJedisPool(jedisPoolConfig,slaveShards));
-                i++;
             }
 
         }
@@ -164,8 +128,19 @@ public class MatrixRedisPool implements RedisPool<ShardedJedis>, InitializingBea
 
     private void buildMasterShardInfos(String masterName, HostAndPort masterInfo){
         JedisShardInfo masterShardInfo = new JedisShardInfo(masterInfo.getHost(),masterInfo.getPort());
-
         masterShards.put(masterName,masterShardInfo);
+    }
+
+    private void buildSlaveShardInfos(String masterName, List<HostAndPort> slaveHaps){
+        List<JedisShardInfo> jedisShardInfos= new ArrayList<>();
+
+        for(HostAndPort slaveHap : slaveHaps) {
+
+            JedisShardInfo slaveShardInfo = new JedisShardInfo(slaveHap.getHost(), slaveHap.getPort());
+            jedisShardInfos.add(slaveShardInfo);
+        }
+
+        multiSlaveShards.put(masterName, jedisShardInfos);
     }
 
 
@@ -173,23 +148,13 @@ public class MatrixRedisPool implements RedisPool<ShardedJedis>, InitializingBea
     @Override
     public void buildMasterSlaveInfo(String masterName, HostAndPort masterInfo, List<HostAndPort> slaveHaps) {
         buildMasterShardInfos(masterName,masterInfo);
-
-        List<JedisShardInfo> jedisShardInfos= new ArrayList<>();
-
-        for(HostAndPort slaveHap : slaveHaps) {
-
-            JedisShardInfo slaveShardInfo = new JedisShardInfo(slaveHap.getHost(), slaveHap.getPort());
-
-            jedisShardInfos.add(slaveShardInfo);
-        }
-
-        multiSlaveShards.put(masterName,jedisShardInfos);
+        buildSlaveShardInfos(masterName,slaveHaps);
     }
 
     @Override
-    public void switchMaster(String masterName, HostAndPort masterInfo){
-
-        buildMasterShardInfos(masterName, masterInfo);
+    public void switchMaster(String masterName, HostAndPort newMasterInfo){
+        sdownSlave(masterName,newMasterInfo);
+        buildMasterShardInfos(masterName, newMasterInfo);
         initMasterPool(new ArrayList<JedisShardInfo>(masterShards.values()));
 
     }
@@ -247,5 +212,21 @@ public class MatrixRedisPool implements RedisPool<ShardedJedis>, InitializingBea
 
     public void setMultiSlaveShards(Map<String, List<JedisShardInfo>> multiSlaveShards) {
         this.multiSlaveShards = multiSlaveShards;
+    }
+
+    public ShardedJedisPool getMasterShardedJedisPool() {
+        return masterShardedJedisPool;
+    }
+
+    public void setMasterShardedJedisPool(ShardedJedisPool masterShardedJedisPool) {
+        this.masterShardedJedisPool = masterShardedJedisPool;
+    }
+
+    public List<ShardedJedisPool> getSlaveShardedJedisPools() {
+        return slaveShardedJedisPools;
+    }
+
+    public void setSlaveShardedJedisPools(List<ShardedJedisPool> slaveShardedJedisPools) {
+        this.slaveShardedJedisPools = slaveShardedJedisPools;
     }
 }

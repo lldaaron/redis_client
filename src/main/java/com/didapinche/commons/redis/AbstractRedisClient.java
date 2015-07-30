@@ -53,8 +53,9 @@ public abstract class AbstractRedisClient implements RedisClient{
     }
 
 
-    protected abstract <T> T execute(MultiKeyCallBack<T> callBack, boolean readonly,int retryTimes);
+    protected abstract <T> T execute(MultiKeyCallBack<T> callBack, boolean readonly,int retryTimes) throws MultiKeyRedisClientException;
 
+    /* multi jedis Commands*/
 
     public String set(final String key, final String value) {
         return execute(new CallBack<String>() {
@@ -1030,11 +1031,11 @@ public abstract class AbstractRedisClient implements RedisClient{
 
 
 
-
+    /* multi jedis Commands*/
 
 
     @Override
-    public Long del(final String... keys) throws RedisClientException {
+    public Long del(final String... keys)  {
 
         return execute(new MultiKeyCallBack<Long>(){
 

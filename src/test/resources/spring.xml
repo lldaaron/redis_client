@@ -38,9 +38,9 @@
     </bean>
 
 
-    <bean id="masterSlaveRedisClient" class="com.didapinche.commons.redis.MasterSlaveRedisClient">
-        <property name="pool" ref="masterSlaveRedisPool"></property>
-    </bean>
+    <!--<bean id="masterSlaveRedisClient" class="com.didapinche.commons.redis.MasterSlaveRedisClient">-->
+        <!--<property name="pool" ref="masterSlaveRedisPool"></property>-->
+    <!--</bean>-->
 
 
 
@@ -99,7 +99,7 @@
 
 
 
-    <bean id="muiltRedisClient" class="com.didapinche.commons.redis.MatrixRedisClient">
+    <bean id="matrixRedisClient" class="com.didapinche.commons.redis.MatrixRedisClient">
         <property name="redisPool" ref="muiltRedisPool"></property>
     </bean>
 
