@@ -15,27 +15,15 @@
 
 
 
-    <bean id="masterSlaveRedisPool" class="com.didapinche.commons.redis.MasterSlaveRedisPool">
-        <property name="jedisPoolConfig" ref="jedisPoolConfig"></property>
-        <property name="masterJedisPool">
-            <bean class="redis.clients.jedis.JedisPool">
-                <constructor-arg name="host" value="127.0.0.1"></constructor-arg>
-                <constructor-arg name="port" value="6379"></constructor-arg>
-            </bean>
-        </property>
-
-        <property name="slaveJedisPool">
-            <bean class="redis.clients.jedis.JedisPool">
-                <constructor-arg name="host" value="127.0.0.1"></constructor-arg>
-                <constructor-arg name="port" value="6380"></constructor-arg>
-            </bean>
-        </property>
-    </bean>
+    <!--<bean id="masterSlaveRedisPool" class="com.didapinche.commons.redis.MasterSlaveRedisPool">-->
+        <!--<property name="jedisPoolConfig" ref="jedisPoolConfig"></property>-->
+        <!-- -->
+    <!--</bean>-->
 
 
-    <bean id="masterSlaveRedisClient" class="com.didapinche.commons.redis.MasterSlaveRedisClient">
-        <property name="pool" ref="masterSlaveRedisPool"></property>
-    </bean>
+    <!--<bean id="masterSlaveRedisClient" class="com.didapinche.commons.redis.MasterSlaveRedisClient">-->
+        <!--<property name="pool" ref="masterSlaveRedisPool"></property>-->
+    <!--</bean>-->
 
 
 
@@ -94,7 +82,7 @@
 
 
 
-    <bean id="muiltRedisClient" class="com.didapinche.commons.redis.MatrixRedisClient">
+    <bean id="matrixRedisClient" class="com.didapinche.commons.redis.MatrixRedisClient">
         <property name="redisPool" ref="muiltRedisPool"></property>
     </bean>
 

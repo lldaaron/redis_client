@@ -18,7 +18,6 @@ public final class MatrixRedisClient extends AbstractRedisClient{
     private static Logger logger = LoggerFactory.getLogger(MatrixRedisClient.class);
 
 
-
     private RedisPool<ShardedJedis> redisPool;
 
     @Override
@@ -84,4 +83,9 @@ public final class MatrixRedisClient extends AbstractRedisClient{
     public void setRedisPool(RedisPool<ShardedJedis> redisPool) {
         this.redisPool = redisPool;
     }
+
+    public RedisPool<ShardedJedis> getRedisPool() {
+        return redisPool;
+    }
+
 }

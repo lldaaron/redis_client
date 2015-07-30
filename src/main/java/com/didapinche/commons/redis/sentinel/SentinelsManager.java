@@ -47,7 +47,7 @@ public class SentinelsManager implements InitializingBean{
 
         HostAndPort master = null;
         List<Map<String,String>>  slaveInfos = null;
-        List<HostAndPort> slaveHaps = new ArrayList<>();
+        List<HostAndPort> slaveHaps = null;
         boolean sentinelAvailable = false;
 
         logger.info("Trying to find master from available Sentinels...");
@@ -66,8 +66,13 @@ public class SentinelsManager implements InitializingBean{
                     List<String> masterAddr = jedis.sentinelGetMasterAddrByName(masterName);
                     slaveInfos = jedis.sentinelSlaves(masterName);
 
+                    slaveHaps = new ArrayList<>();
                     for(Map<String,String>slaveInfo : slaveInfos) {
 
+                        String sdownTime = slaveInfo.get("s-down-time");
+                        if(!(sdownTime == null || "0".equals(sdownTime))){
+                            continue;
+                        }
                         String host = slaveInfo.get("ip");
                         String port = slaveInfo.get("port");
                         HostAndPort hostAndPort = new HostAndPort(host, Integer.parseInt(port));

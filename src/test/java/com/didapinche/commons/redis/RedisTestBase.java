@@ -17,17 +17,6 @@ import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 public class RedisTestBase extends AbstractJUnit4SpringContextTests {
 
 
-    @Autowired
-    protected RedisClient masterSlaveRedisClient;
-
-    @Autowired
-    protected RedisClient muiltRedisClient;
-
-
-    @Before
-    public void setup(){
-
-    }
 
 
 }
