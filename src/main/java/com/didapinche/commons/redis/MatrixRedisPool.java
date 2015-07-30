@@ -148,9 +148,9 @@ public class MatrixRedisPool implements RedisPool<ShardedJedis>, InitializingBea
     }
 
     @Override
-    public void switchMaster(String masterName, HostAndPort masterInfo){
-
-        buildMasterShardInfos(masterName, masterInfo);
+    public void switchMaster(String masterName, HostAndPort newMasterInfo){
+        sdownSlave(masterName,newMasterInfo);
+        buildMasterShardInfos(masterName, newMasterInfo);
         initMasterPool(new ArrayList<JedisShardInfo>(masterShards.values()));
 
     }
