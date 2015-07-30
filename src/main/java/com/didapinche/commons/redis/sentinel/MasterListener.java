@@ -13,7 +13,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * 用于监听一组__sentinel__:hello频道的消息
+ * 订阅sentinel频道的消息
  *
  * @author 罗立东 rod
  * @time 15/7/29
@@ -144,7 +144,7 @@ public class MasterListener implements Runnable {
 
             if (channel.equals(N_S_DOWN)) {
                 if (!masterNames.contains(messageArray[5])) {
-                    logger.info("Ignoring message on " + S_DOWN + " for master name " + messageArray[5] + ".");
+                    logger.info("Ignoring message on " + N_S_DOWN + " for master name " + messageArray[5] + ".");
                     return;
                 } else if (messageArray[0].equals("master")) {
                     return;//master上线，忽略 ,等待+switch-master （应该不会发生。。。）
