@@ -4,8 +4,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import redis.clients.jedis.*;
-import redis.clients.jedis.exceptions.JedisConnectionException;
-import redis.clients.jedis.exceptions.JedisException;
 
 import java.util.*;
 
@@ -54,7 +52,7 @@ import java.util.*;
  *
  * Copyright 2015 didapinche.com
  */
-public class MultiRedisPool implements ReidsPool<ShardedJedis>, InitializingBean {
+public class MultiRedisPool implements RedisPool<ShardedJedis>, InitializingBean {
     private static final Logger logger = LoggerFactory.getLogger(MultiRedisPool.class);
     //记录当前线程使用的线程池，方便释放资源
     private ThreadLocal<ShardedJedisPool> slavePoolTh = new ThreadLocal();

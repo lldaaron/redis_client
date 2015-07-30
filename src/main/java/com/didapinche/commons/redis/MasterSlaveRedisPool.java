@@ -1,6 +1,5 @@
 package com.didapinche.commons.redis;
 
-import com.didapinche.commons.redis.sentinel.SentinelActor;
 import org.springframework.beans.factory.InitializingBean;
 import redis.clients.jedis.*;
 
@@ -35,7 +34,7 @@ import java.util.Map;
  *
  * Copyright 2015 didapinche.com
  */
-public class MasterSlaveRedisPool implements ReidsPool<Jedis>,InitializingBean{
+public class MasterSlaveRedisPool implements RedisPool<Jedis>,InitializingBean{
     private JedisPoolConfig jedisPoolConfig;
 
 

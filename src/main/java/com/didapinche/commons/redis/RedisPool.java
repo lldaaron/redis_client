@@ -12,7 +12,7 @@ import java.util.Random;
  * 线程池接口
  * Created by fengbin on 15/7/30.
  */
-public interface ReidsPool<T extends JedisCommands> extends SentinelActor{
+public interface RedisPool<T extends JedisCommands> extends SentinelActor{
     /**
      * 初始化redis连接池
      */

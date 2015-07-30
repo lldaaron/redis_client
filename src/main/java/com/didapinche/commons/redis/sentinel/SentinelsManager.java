@@ -22,7 +22,7 @@ public class SentinelsManager {
 
     private SentinelInfo sentinelInfo;
 
-    private ReidsPool reidsPool;
+    private RedisPool reidsPool;
     /**
      * 初始化一组sentinel监听服务，之后初始化master连接池和slave连接池
      * @return
@@ -110,11 +110,11 @@ public class SentinelsManager {
 
 
 
-    public ReidsPool getReidsPool() {
+    public RedisPool getReidsPool() {
         return reidsPool;
     }
 
-    public void setReidsPool(ReidsPool reidsPool) {
+    public void setReidsPool(RedisPool reidsPool) {
         this.reidsPool = reidsPool;
     }
 
