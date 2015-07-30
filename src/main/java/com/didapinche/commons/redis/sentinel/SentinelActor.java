@@ -38,8 +38,8 @@ public interface SentinelActor {
      * 首次初始化主从信息
      * @param masterName
      * @param masterInfo
-     * @param slaveInfos
+     * @param slaveHaps
      */
-    void buildMasterSlaveInfo(String masterName, HostAndPort masterInfo, List<Map<String, String>> slaveInfos);
+    void buildMasterSlaveInfo(String masterName, HostAndPort masterInfo, List<HostAndPort> slaveHaps);
 
 }

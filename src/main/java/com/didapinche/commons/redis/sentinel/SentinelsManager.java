@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisShardInfo;
 import redis.clients.jedis.exceptions.JedisConnectionException;
 import redis.clients.jedis.exceptions.JedisException;
 
@@ -34,7 +35,8 @@ public class SentinelsManager implements InitializingBean{
         List<String> masterNames = sentinelInfo.getMasterNames();
 
         HostAndPort master = null;
-        List<Map<String,String>>  slaveInfo = null;
+        List<Map<String,String>>  slaveInfos = null;
+        List<HostAndPort> slaveHaps = new ArrayList<>();
         boolean sentinelAvailable = false;
 
         logger.info("Trying to find master from available Sentinels...");
@@ -51,7 +53,16 @@ public class SentinelsManager implements InitializingBean{
 
 
                     List<String> masterAddr = jedis.sentinelGetMasterAddrByName(masterName);
-                    slaveInfo = jedis.sentinelSlaves(masterName);
+                    slaveInfos = jedis.sentinelSlaves(masterName);
+
+                    for(Map<String,String>slaveInfo : slaveInfos) {
+
+                        String host = slaveInfo.get("ip");
+                        String port = slaveInfo.get("port");
+                        HostAndPort hostAndPort = new HostAndPort(host, Integer.parseInt(port));
+
+                        slaveHaps.add(hostAndPort);
+                    }
 
                     // connected to sentinel...
                     sentinelAvailable = true;
@@ -90,7 +101,7 @@ public class SentinelsManager implements InitializingBean{
             }
 
             //构建一个masterName
-            reidsPool.buildMasterSlaveInfo(masterName, master, slaveInfo);
+            reidsPool.buildMasterSlaveInfo(masterName, master, slaveHaps);
         }
 
         //初始化线程池
@@ -109,8 +120,11 @@ public class SentinelsManager implements InitializingBean{
 
     }
 
-
-
+    public void shutdownSentinels(){
+        for (MasterListener masterListener : masterListeners) {
+            masterListener.shutdown();
+        }
+    }
 
 
     public RedisPool getReidsPool() {
