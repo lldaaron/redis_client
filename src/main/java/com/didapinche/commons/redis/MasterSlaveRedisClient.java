@@ -108,7 +108,7 @@ public final class MasterSlaveRedisClient extends AbstractRedisClient {
         }
     }
 
-    
+
 
 
     public void setAutoReadFromSlave(boolean autoReadFromSlave) {

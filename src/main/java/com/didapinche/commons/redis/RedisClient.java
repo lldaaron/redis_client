@@ -3,9 +3,15 @@ package com.didapinche.commons.redis;
 import redis.clients.jedis.JedisCommands;
 import redis.clients.jedis.MultiKeyCommands;
 
+
 /**
- * Created by fengbin on 15/7/29.
+ * RedisClientException.java
+ * Project: redis client
+ *
+ * File Created at 2015-7-30 by fengbin
+ *
+ * Copyright 2015 didapinche.com
  */
 public interface RedisClient extends JedisCommands,MultiKeyCommands {
-    public Double hincrByFloat(final String key, final String field, final double value);
+    Double hincrByFloat(final String key, final String field, final double value);
 }

@@ -3,14 +3,15 @@ package com.didapinche.commons.redis;
 import com.didapinche.commons.redis.sentinel.SentinelActor;
 import redis.clients.jedis.*;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-
 /**
  *
  * 线程池接口
- * Created by fengbin on 15/7/30.
+ * RedisClientException.java
+ * Project: redis client
+ *
+ * File Created at 2015-7-30 by fengbin
+ *
+ * Copyright 2015 didapinche.com
  */
 public interface RedisPool<T extends JedisCommands> extends SentinelActor{
     /**
