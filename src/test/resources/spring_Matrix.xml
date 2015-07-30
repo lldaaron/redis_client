@@ -13,38 +13,6 @@
         <property name="maxIdle" value="10"/>
     </bean>
 
-
-
-    <bean id="masterSlaveRedisPool" class="com.didapinche.commons.redis.MasterSlaveRedisPool">
-        <property name="jedisPoolConfig" ref="jedisPoolConfig"></property>
-        <property name="masterHap">
-            <bean class="redis.clients.jedis.HostAndPort">
-                <constructor-arg name="host" value="127.0.0.1"/>
-                <constructor-arg name="port" value="6379"/>
-            </bean>
-        </property>
-        <property name="slaveHaps">
-            <list>
-                <bean class="redis.clients.jedis.HostAndPort">
-                    <constructor-arg name="host" value="127.0.0.1"/>
-                    <constructor-arg name="port" value="6380"/>
-                </bean>
-                <bean class="redis.clients.jedis.HostAndPort">
-                    <constructor-arg name="host" value="127.0.0.1"/>
-                    <constructor-arg name="port" value="6381"/>
-                </bean>
-            </list>
-        </property>
-    </bean>
-
-
-    <!--<bean id="masterSlaveRedisClient" class="com.didapinche.commons.redis.MasterSlaveRedisClient">-->
-        <!--<property name="pool" ref="masterSlaveRedisPool"></property>-->
-    <!--</bean>-->
-
-
-
-
     <bean id="muiltRedisPool" class="com.didapinche.commons.redis.MatrixRedisPool">
         <property name="jedisPoolConfig" ref="jedisPoolConfig"></property>
         <!--<property name="masterShards">-->
@@ -96,13 +64,9 @@
         <!--</property>-->
     </bean>
 
-
-
-
     <bean id="matrixRedisClient" class="com.didapinche.commons.redis.MatrixRedisClient">
         <property name="redisPool" ref="muiltRedisPool"></property>
     </bean>
-
 
     <bean id ="sentinelsManager" class="com.didapinche.commons.redis.sentinel.SentinelsManager">
         <property name="reidsPool" ref="muiltRedisPool"></property>
@@ -127,7 +91,5 @@
             </bean>
         </property>
     </bean>
-
-
 
 </beans>
