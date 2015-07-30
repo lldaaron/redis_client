@@ -4,6 +4,7 @@ import com.didapinche.commons.redis.*;
 import com.didapinche.commons.redis.utils.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.InitializingBean;
 import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.exceptions.JedisConnectionException;
@@ -14,7 +15,7 @@ import java.util.*;
 /**
  * Created by fengbin on 15/7/30.
  */
-public class SentinelsManager {
+public class SentinelsManager implements InitializingBean{
     private static final Logger logger = LoggerFactory.getLogger(SentinelsManager.class);
 
     //监听redisSentinel
@@ -126,5 +127,10 @@ public class SentinelsManager {
 
     public void setSentinelInfo(SentinelInfo sentinelInfo) {
         this.sentinelInfo = sentinelInfo;
+    }
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        initSentinels();
     }
 }

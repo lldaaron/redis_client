@@ -162,13 +162,14 @@ public class MultiRedisPool implements RedisPool<ShardedJedis>, InitializingBean
     }
 
 
+    private void buildMasterShardInfos(String masterName, HostAndPort masterInfo){
+        JedisShardInfo masterShardInfo = new JedisShardInfo(masterInfo.getHost(),masterInfo.getPort());
+
+        masterShards.put(masterName,masterShardInfo);
+    }
 
 
-
-
-    @Override
-    public void buildMasterSlaveInfo(String masterName, HostAndPort masterInfo, List<Map<String, String>> slaveInfos) {
-        buildMasterShardInfos(masterName,masterInfo);
+    private void buildSlaveShardInfos(String masterName, List<Map<String, String>> slaveInfos){
 
         List<JedisShardInfo> jedisShardInfos= new ArrayList<>();
 
@@ -183,7 +184,13 @@ public class MultiRedisPool implements RedisPool<ShardedJedis>, InitializingBean
         }
 
         multiSlaveShards.put(masterName,jedisShardInfos);
-        initPool();
+    }
+
+
+    @Override
+    public void buildMasterSlaveInfo(String masterName, HostAndPort masterInfo, List<Map<String, String>> slaveInfos) {
+        buildMasterShardInfos(masterName,masterInfo);
+        buildSlaveShardInfos(masterName,slaveInfos);
     }
 
     @Override
@@ -225,15 +232,6 @@ public class MultiRedisPool implements RedisPool<ShardedJedis>, InitializingBean
 
         initSlavePool();
     }
-
-
-    public void buildMasterShardInfos(String masterName, HostAndPort masterInfo){
-        JedisShardInfo masterShardInfo = new JedisShardInfo(masterInfo.getHost(),masterInfo.getPort());
-
-        masterShards.put(masterName,masterShardInfo);
-    }
-
-
 
 
 

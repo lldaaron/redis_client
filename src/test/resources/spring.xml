@@ -40,83 +40,87 @@
 
 
 
-    <bean id="muiltRedisPool" class="com.didapinche.commons.redis.MuiltRedisPool">
+    <bean id="muiltRedisPool" class="com.didapinche.commons.redis.MultiRedisPool">
         <property name="jedisPoolConfig" ref="jedisPoolConfig"></property>
-        <property name="masterShards">
-            <list>
-                <bean class="redis.clients.jedis.JedisShardInfo">
-                    <constructor-arg name="host" value="127.0.0.1"></constructor-arg>
-                    <constructor-arg name="port" value="6379"></constructor-arg>
-                </bean>
-                <bean class="redis.clients.jedis.JedisShardInfo">
-                    <constructor-arg name="host" value="127.0.0.1"></constructor-arg>
-                    <constructor-arg name="port" value="7379"></constructor-arg>
-                </bean>
-            </list>
-        </property>
+        <!--<property name="masterShards">-->
+            <!--<map>-->
+                <!--<entry key="master1">-->
+                    <!--<bean class="redis.clients.jedis.JedisShardInfo">-->
+                        <!--<constructor-arg name="host" value="127.0.0.1"></constructor-arg>-->
+                        <!--<constructor-arg name="port" value="6379"></constructor-arg>-->
+                    <!--</bean>-->
+                <!--</entry>-->
+                <!--<entry key="master1">-->
+                    <!--<bean class="redis.clients.jedis.JedisShardInfo">-->
+                        <!--<constructor-arg name="host" value="127.0.0.1"></constructor-arg>-->
+                        <!--<constructor-arg name="port" value="7379"></constructor-arg>-->
+                    <!--</bean>-->
+                <!--</entry>-->
+            <!--</map>-->
+        <!--</property>-->
 
-        <property name="slaveShards">
-            <list>
-                <bean class="redis.clients.jedis.JedisShardInfo">
-                    <constructor-arg name="host" value="127.0.0.1"></constructor-arg>
-                    <constructor-arg name="port" value="6380"></constructor-arg>
-                </bean>
-                <bean class="redis.clients.jedis.JedisShardInfo">
-                    <constructor-arg name="host" value="127.0.0.1"></constructor-arg>
-                    <constructor-arg name="port" value="7380"></constructor-arg>
-                </bean>
-            </list>
-        </property>
+        <!--<property name="multiSlaveShards">-->
+            <!--<map>-->
+                <!--<entry key="master1">-->
+                    <!--<list>-->
+                        <!--<bean class="redis.clients.jedis.JedisShardInfo">-->
+                            <!--<constructor-arg name="host" value="127.0.0.1"></constructor-arg>-->
+                            <!--<constructor-arg name="port" value="6380"></constructor-arg>-->
+                        <!--</bean>-->
+                        <!--<bean class="redis.clients.jedis.JedisShardInfo">-->
+                            <!--<constructor-arg name="host" value="127.0.0.1"></constructor-arg>-->
+                            <!--<constructor-arg name="port" value="6381"></constructor-arg>-->
+                        <!--</bean>-->
+                    <!--</list>-->
+                <!--</entry>-->
+
+                <!--<entry key="master2">-->
+                    <!--<list>-->
+                        <!--<bean class="redis.clients.jedis.JedisShardInfo">-->
+                            <!--<constructor-arg name="host" value="127.0.0.1"></constructor-arg>-->
+                            <!--<constructor-arg name="port" value="7380"></constructor-arg>-->
+                        <!--</bean>-->
+                        <!--<bean class="redis.clients.jedis.JedisShardInfo">-->
+                            <!--<constructor-arg name="host" value="127.0.0.1"></constructor-arg>-->
+                            <!--<constructor-arg name="port" value="7381"></constructor-arg>-->
+                        <!--</bean>-->
+                    <!--</list>-->
+                <!--</entry>-->
+
+            <!--</map>-->
+        <!--</property>-->
     </bean>
 
 
 
 
-    <bean id="muiltRedisClient" class="com.didapinche.commons.redis.MuiltRedisClient">
-        <property name="pool" ref="muiltRedisPool"></property>
+    <bean id="muiltRedisClient" class="com.didapinche.commons.redis.MultiRedisClient">
+        <property name="redisPool" ref="muiltRedisPool"></property>
     </bean>
 
 
-    <bean id ="redisSentinelPool" class="com.didapinche.commons.redis.RedisSentinelPool">
-        <property name="jedisPoolConfig" ref="jedisPoolConfig"></property>
+    <bean id ="redisSentinelPool" class="com.didapinche.commons.redis.sentinel.SentinelsManager">
+        <property name="reidsPool" ref="muiltRedisPool"></property>
+        <property name="sentinelInfo">
+            <bean class="com.didapinche.commons.redis.sentinel.SentinelInfo">
+                <property name="masterNames" >
+                    <list>
+                        <value>master1</value>
+                        <value>master2</value>
+                    </list>
+                </property>
+                <property name="sentinels">
+                    <set>
+                        <value>127.0.0.1:26379</value>
+                        <value>127.0.0.1:26380</value>
+                        <value>127.0.0.1:26381</value>
+                    </set>
+                </property>
 
-        <property name="sentinelShards">
-            <map >
-                <entry key="master1">
-                    <bean class="com.didapinche.commons.redis.sentinel.SentinelInfo">
-                        <property name="sentinels">
-                            <set>
-                                <value>127.0.0.1:26379</value>
-                                <value>127.0.0.1:26380</value>
-                                <value>127.0.0.1:26381</value>
-                            </set>
-                        </property>
-                        <property name="weight" value="1"></property>
-                        <property name="password" value="" ></property>
-                    </bean>
-                </entry>
-
-                <entry key="master2">
-                    <bean class="com.didapinche.commons.redis.sentinel.SentinelInfo">
-                        <property name="sentinels">
-                            <set>
-                                <value>127.0.0.1:26379</value>
-                                <value>127.0.0.1:26380</value>
-                                <value>127.0.0.1:26381</value>
-                            </set>
-                        </property>
-                        <property name="weight" value="1"></property>
-                        <property name="password" value="" ></property>
-                    </bean>
-                </entry>
-            </map>
+                <property name="weight" value="1"></property>
+                <property name="password" value="" ></property>
+            </bean>
         </property>
-    </bean>
-
-
-
-    <bean id="redisSentinelClient" class="com.didapinche.commons.redis.SentinelRedisClient">
-        <property name="redisSentinelPool" ref="redisSentinelPool"></property>
     </bean>
 
 

@@ -2,6 +2,7 @@ package com.didapinche.commons.redis;
 
 import org.junit.Before;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 
@@ -17,7 +18,10 @@ public class RedisTestBase extends AbstractJUnit4SpringContextTests {
 
 
     @Autowired
-    protected RedisClient redisClient;
+    protected RedisClient masterSlaveRedisClient;
+
+    @Autowired
+    protected RedisClient muiltRedisClient;
 
 
     @Before

@@ -18,7 +18,7 @@ public final class MultiRedisClient extends AbstractRedisClient{
 
 
 
-    private MultiRedisPool redisSentinelPool;
+    private RedisPool<ShardedJedis> redisPool;
 
     @Override
     protected <T> T execute(CallBack<T> callBack) {
@@ -41,11 +41,11 @@ public final class MultiRedisClient extends AbstractRedisClient{
             throw new DiDaRedisClientException("have retried 3 times for redis command");
         }
 
-        if (readonly && autoReadFromSlave && redisSentinelPool.hasSlave()) {
+        if (readonly && autoReadFromSlave && redisPool.hasSlave()) {
             ShardedJedis shardedJedis = null;
 
             try {
-                shardedJedis = redisSentinelPool.getSlaveResource();
+                shardedJedis = redisPool.getSlaveResource();
                 T result = callBack.execute(shardedJedis);
 
                 return result;
@@ -57,7 +57,7 @@ public final class MultiRedisClient extends AbstractRedisClient{
                 throw e;
             }finally {
                 if(shardedJedis != null) {
-                    redisSentinelPool.returnSlaveResourceObject(shardedJedis);
+                    redisPool.returnSlaveResourceObject(shardedJedis);
                 }
             }
 
@@ -66,7 +66,7 @@ public final class MultiRedisClient extends AbstractRedisClient{
             ShardedJedis shardedJedis = null;
 
             try {
-                shardedJedis = redisSentinelPool.getMasterResource();
+                shardedJedis = redisPool.getMasterResource();
                 T result = callBack.execute(shardedJedis);
 
                 return result;
@@ -78,17 +78,15 @@ public final class MultiRedisClient extends AbstractRedisClient{
                 throw e;
             }finally {
                 if(shardedJedis != null) {
-                    redisSentinelPool.returnMasterResourceObject(shardedJedis);
+                    redisPool.returnMasterResourceObject(shardedJedis);
                 }
             }
 
         }
     }
-    public MultiRedisPool getRedisSentinelPool() {
-        return redisSentinelPool;
-    }
 
-    public void setRedisSentinelPool(MultiRedisPool redisSentinelPool) {
-        this.redisSentinelPool = redisSentinelPool;
+
+    public void setRedisPool(RedisPool<ShardedJedis> redisPool) {
+        this.redisPool = redisPool;
     }
 }
