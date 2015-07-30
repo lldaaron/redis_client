@@ -1,6 +1,7 @@
 package com.didapinche.commons.redis;
 
-import com.didapinche.commons.redis.exceptions.DiDaRedisClientException;
+import com.didapinche.commons.redis.exceptions.MultiKeyRedisClientException;
+import com.didapinche.commons.redis.exceptions.RedisClientException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.jedis.ShardedJedis;
@@ -12,13 +13,13 @@ import redis.clients.jedis.ShardedJedis;
  *
  * Copyright 2015 didapinche.com
  */
-public final class MultiRedisClient extends AbstractRedisClient{
+public final class MatrixRedisClient extends AbstractRedisClient{
 
-    private static Logger logger = LoggerFactory.getLogger(MultiRedisClient.class);
+    private static Logger logger = LoggerFactory.getLogger(MatrixRedisClient.class);
 
 
 
-    private MultiRedisPool redisSentinelPool;
+    private RedisPool<ShardedJedis> redisPool;
 
     @Override
     protected <T> T execute(CallBack<T> callBack) {
@@ -38,14 +39,14 @@ public final class MultiRedisClient extends AbstractRedisClient{
         if(retryTimes > 3) {
 
             logger.error("have retried 3 times for redis command");
-            throw new DiDaRedisClientException("have retried 3 times for redis command");
+            throw new RedisClientException("have retried 3 times for redis command");
         }
 
-        if (readonly && autoReadFromSlave && redisSentinelPool.hasSlave()) {
+        if (readonly && autoReadFromSlave && redisPool.hasSlave()) {
             ShardedJedis shardedJedis = null;
 
             try {
-                shardedJedis = redisSentinelPool.getSlaveResource();
+                shardedJedis = redisPool.getSlaveResource();
                 T result = callBack.execute(shardedJedis);
 
                 return result;
@@ -57,7 +58,7 @@ public final class MultiRedisClient extends AbstractRedisClient{
                 throw e;
             }finally {
                 if(shardedJedis != null) {
-                    redisSentinelPool.returnSlaveResourceObject(shardedJedis);
+                    redisPool.returnSlaveResourceObject(shardedJedis);
                 }
             }
 
@@ -66,7 +67,7 @@ public final class MultiRedisClient extends AbstractRedisClient{
             ShardedJedis shardedJedis = null;
 
             try {
-                shardedJedis = redisSentinelPool.getMasterResource();
+                shardedJedis = redisPool.getMasterResource();
                 T result = callBack.execute(shardedJedis);
 
                 return result;
@@ -78,17 +79,30 @@ public final class MultiRedisClient extends AbstractRedisClient{
                 throw e;
             }finally {
                 if(shardedJedis != null) {
-                    redisSentinelPool.returnMasterResourceObject(shardedJedis);
+                    redisPool.returnMasterResourceObject(shardedJedis);
                 }
             }
 
         }
     }
-    public MultiRedisPool getRedisSentinelPool() {
-        return redisSentinelPool;
+
+    @Override
+    protected <T> T execute(MultiKeyCallBack<T> callBack) {
+        throw new MultiKeyRedisClientException();
     }
 
-    public void setRedisSentinelPool(MultiRedisPool redisSentinelPool) {
-        this.redisSentinelPool = redisSentinelPool;
+    @Override
+    protected <T> T execute(MultiKeyCallBack<T> callBack, boolean readonly) {
+        throw new MultiKeyRedisClientException();
+    }
+
+    @Override
+    protected <T> T execute(MultiKeyCallBack<T> callBack, boolean readonly, int retryTimes) {
+        throw new MultiKeyRedisClientException();
+    }
+
+
+    public void setRedisPool(RedisPool<ShardedJedis> redisPool) {
+        this.redisPool = redisPool;
     }
 }

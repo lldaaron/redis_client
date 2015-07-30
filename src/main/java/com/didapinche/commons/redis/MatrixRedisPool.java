@@ -52,8 +52,8 @@ import java.util.*;
  *
  * Copyright 2015 didapinche.com
  */
-public class MultiRedisPool implements RedisPool<ShardedJedis>, InitializingBean {
-    private static final Logger logger = LoggerFactory.getLogger(MultiRedisPool.class);
+public class MatrixRedisPool implements RedisPool<ShardedJedis>, InitializingBean {
+    private static final Logger logger = LoggerFactory.getLogger(MatrixRedisPool.class);
     //记录当前线程使用的线程池，方便释放资源
     private ThreadLocal<ShardedJedisPool> slavePoolTh = new ThreadLocal();
 
@@ -162,7 +162,11 @@ public class MultiRedisPool implements RedisPool<ShardedJedis>, InitializingBean
     }
 
 
+    private void buildMasterShardInfos(String masterName, HostAndPort masterInfo){
+        JedisShardInfo masterShardInfo = new JedisShardInfo(masterInfo.getHost(),masterInfo.getPort());
 
+        masterShards.put(masterName,masterShardInfo);
+    }
 
 
 
@@ -180,7 +184,6 @@ public class MultiRedisPool implements RedisPool<ShardedJedis>, InitializingBean
         }
 
         multiSlaveShards.put(masterName,jedisShardInfos);
-        initPool();
     }
 
     @Override
@@ -222,15 +225,6 @@ public class MultiRedisPool implements RedisPool<ShardedJedis>, InitializingBean
 
         initSlavePool();
     }
-
-
-    public void buildMasterShardInfos(String masterName, HostAndPort masterInfo){
-        JedisShardInfo masterShardInfo = new JedisShardInfo(masterInfo.getHost(),masterInfo.getPort());
-
-        masterShards.put(masterName,masterShardInfo);
-    }
-
-
 
 
 
