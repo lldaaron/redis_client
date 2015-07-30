@@ -66,12 +66,6 @@ public class MasterSlaveRedisPool implements RedisPool<Jedis>, InitializingBean 
      */
     private List<HostAndPort> slaveHaps;
 
-    private final ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
-
-    private final Lock readLock = readWriteLock.readLock();
-    private final Lock writeLock = readWriteLock.writeLock();
-
-
     @Override
     public void initPool() {
         initMasterPool();
