@@ -88,9 +88,7 @@ public class SentinelsManager {
                 }
             }
 
-            if(slaveInfo != null) {
-                reidsPool.buildMasterSlaveInfo(masterName, master, slaveInfo);
-            }
+            reidsPool.buildMasterSlaveInfo(masterName, master, slaveInfo);
         }
 
 
