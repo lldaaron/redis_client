@@ -1,6 +1,5 @@
 package com.didapinche.commons.redis;
 
-import com.didapinche.commons.redis.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -55,14 +54,13 @@ import java.util.*;
  *
  * Copyright 2015 didapinche.com
  */
-public class RedisSentinelPool implements InitializingBean {
+public class MultiRedisPool implements InitializingBean {
     private static final Logger logger = LoggerFactory.getLogger(SentinelRedisClient.class);
     //记录当前线程使用的线程池，方便释放资源
     private ThreadLocal<ShardedJedisPool> slavePoolTh = new ThreadLocal();
 
 
     private JedisPoolConfig jedisPoolConfig;
-    private Map<String,SentinelInfo> sentinelShards;
 
     //主从配置信息
     private Map<String,JedisShardInfo> masterShards = new HashMap<>();
@@ -72,19 +70,10 @@ public class RedisSentinelPool implements InitializingBean {
     private ShardedJedisPool masterShardedJedisPool;
     private List<ShardedJedisPool> slaveShardedJedisPools = new ArrayList<>();
 
-    //监听redisSentinel
-    private Set<com.didapinche.commons.redis.MasterListener> masterListeners = new HashSet<com.didapinche.commons.redis.MasterListener>();
-
 
     @Override
     public void afterPropertiesSet() throws Exception {
-
-        if(sentinelShards != null) {
-
-            initSentinelShards(sentinelShards);
-        } else {
-            initPool();
-        }
+        initPool();
     }
 
 
@@ -122,91 +111,7 @@ public class RedisSentinelPool implements InitializingBean {
 
 
 
-    /**
-     * 初始化一组sentinel监听服务，之后初始化master连接池和slave连接池
-     * @param masterName
-     * @param sentinelInfo
-     * @return
-     */
-    private HostAndPort initOneSentinels(final String masterName,SentinelInfo sentinelInfo) {
 
-        Set<String> sentinels = sentinelInfo.getSentinels();
-
-        HostAndPort master = null;
-        boolean sentinelAvailable = false;
-
-        logger.info("Trying to find master from available Sentinels...");
-
-        for (String sentinel : sentinels) {
-            final HostAndPort hap = toHostAndPort(Arrays.asList(sentinel.split(":")));
-
-            logger.info("Connecting to Sentinel " + hap);
-
-            Jedis jedis = null;
-            try {
-                jedis = new Jedis(hap.getHost(), hap.getPort());
-
-                List<String> masterAddr = jedis.sentinelGetMasterAddrByName(masterName);
-
-                // connected to sentinel...
-                sentinelAvailable = true;
-
-                if (masterAddr == null || masterAddr.size() != 2) {
-                    logger.warn("Can not get master addr, master name: " + masterName + ". Sentinel: " + hap
-                            + ".");
-                    continue;
-                }
-
-                master = toHostAndPort(masterAddr);
-
-                List<Map<String,String>>slaveInfo = jedis.sentinelSlaves(masterName);
-                buildShardInfos(masterName, master, slaveInfo);
-
-
-                logger.info("Found Redis master at " + master);
-                break;
-            } catch (JedisConnectionException e) {
-                logger.warn("Cannot connect to sentinel running @ " + hap + ". Trying next one.");
-            } finally {
-                if (jedis != null) {
-                    jedis.close();
-                }
-            }
-        }
-
-        if (master == null) {
-            if (sentinelAvailable) {
-                // can connect to sentinel, but master name seems to not
-                // monitored
-                throw new JedisException("Can connect to sentinel, but " + masterName
-                        + " seems to be not monitored...");
-            } else {
-                throw new JedisConnectionException("All sentinels down, cannot determine where is "
-                        + masterName + " master is running...");
-            }
-        }
-
-        logger.info("Redis master running at " + master + ", starting Sentinel listeners...");
-
-        for (String sentinel : sentinels) {
-            final HostAndPort hap = toHostAndPort(Arrays.asList(sentinel.split(":")));
-            com.didapinche.commons.redis.MasterListener masterListener = new com.didapinche.commons.redis.MasterListener(masterName, hap.getHost(), hap.getPort(),this);
-            masterListeners.add(masterListener);
-            masterListener.start();
-        }
-
-        return master;
-    }
-
-
-    private void initSentinelShards(Map<String,SentinelInfo> sentinelShards){
-
-        for(String masterName:sentinelShards.keySet()){
-            initOneSentinels(masterName,sentinelShards.get(masterName));
-        }
-
-        initPool();
-    }
 
 
     private void initMasterPool(List<JedisShardInfo> masterShards) {
@@ -252,7 +157,6 @@ public class RedisSentinelPool implements InitializingBean {
 
 
     public  void initPool(){
-
         initPool(new ArrayList<JedisShardInfo>(masterShards.values()),multiSlaveShards);
     }
 
@@ -267,11 +171,12 @@ public class RedisSentinelPool implements InitializingBean {
 
     public void switchMaster(String masterName, HostAndPort masterInfo){
 
-        buildMasterShardInfos(masterName,masterInfo);
+        buildMasterShardInfos(masterName, masterInfo);
         initMasterPool(new ArrayList<JedisShardInfo>(masterShards.values()));
-        //sdownSlave(masterName,masterInfo);
 
     }
+
+
     public void buildMasterShardInfos(String masterName, HostAndPort masterInfo){
         JedisShardInfo masterShardInfo = new JedisShardInfo(masterInfo.getHost(),masterInfo.getPort());
 
@@ -328,21 +233,7 @@ public class RedisSentinelPool implements InitializingBean {
     }
 
 
-    private HostAndPort toHostAndPort(List<String> getMasterAddrByNameResult) {
-        String host = getMasterAddrByNameResult.get(0);
-        int port = Integer.parseInt(getMasterAddrByNameResult.get(1));
 
-        return new HostAndPort(host, port);
-    }
-
-
-    public Map<String, SentinelInfo> getSentinelShards() {
-        return sentinelShards;
-    }
-
-    public void setSentinelShards(Map<String, SentinelInfo> sentinelShards) {
-        this.sentinelShards = sentinelShards;
-    }
 
     public void setJedisPoolConfig(JedisPoolConfig jedisPoolConfig) {
         this.jedisPoolConfig = jedisPoolConfig;

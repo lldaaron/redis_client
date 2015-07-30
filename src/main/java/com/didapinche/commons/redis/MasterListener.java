@@ -1,5 +1,6 @@
 package com.didapinche.commons.redis;
 
+import com.didapinche.commons.redis.utils.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.jedis.HostAndPort;
@@ -8,8 +9,6 @@ import redis.clients.jedis.JedisPubSub;
 import redis.clients.jedis.exceptions.JedisConnectionException;
 
 import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * MasterListener.java 监听sentinel 的+sdown -sdown & +switch-master
@@ -78,7 +77,7 @@ public class MasterListener extends Thread {
 
                                 return;//忽略 “+sdown” ,等待+switch-master
                             } else {
-                                HostAndPort slave = toHostAndPort(Arrays.asList(switchMasterMsg[2], switchMasterMsg[3]));
+                                HostAndPort slave = Utils.toHostAndPort(Arrays.asList(switchMasterMsg[2], switchMasterMsg[3]));
                                 pool.sdownSlave(masterName,slave);
                                 return;
                             }
@@ -95,7 +94,7 @@ public class MasterListener extends Thread {
 
                                 return;//忽略 “+sdown” ,等待+switch-master
                             } else {
-                                HostAndPort slave = toHostAndPort(Arrays.asList(switchMasterMsg[2], switchMasterMsg[3]));
+                                HostAndPort slave = Utils.toHostAndPort(Arrays.asList(switchMasterMsg[2], switchMasterMsg[3]));
                                 pool.$sdownSlave(masterName, slave);
                                 return;
                             }
@@ -106,7 +105,7 @@ public class MasterListener extends Thread {
                         if (switchMasterMsg.length > 3) {
 
                             if (masterName.equals(switchMasterMsg[0])) {
-                                HostAndPort master = toHostAndPort(Arrays.asList(switchMasterMsg[3], switchMasterMsg[4]));
+                                HostAndPort master = Utils.toHostAndPort(Arrays.asList(switchMasterMsg[3], switchMasterMsg[4]));
                                 pool.switchMaster(masterName, master);
                             } else {
                                 logger.info("Ignoring message on +switch-master for master name "
@@ -151,14 +150,4 @@ public class MasterListener extends Thread {
             logger.error("Caught exception while shutting down: ", e);
         }
     }
-
-
-
-    private HostAndPort toHostAndPort(List<String> getMasterAddrByNameResult) {
-        String host = getMasterAddrByNameResult.get(0);
-        int port = Integer.parseInt(getMasterAddrByNameResult.get(1));
-
-        return new HostAndPort(host, port);
-    }
-
 }

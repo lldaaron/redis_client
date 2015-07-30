@@ -1,5 +1,6 @@
 package com.didapinche.commons.redis.sentinel;
 
+import com.didapinche.commons.redis.utils.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.jedis.HostAndPort;
@@ -17,6 +18,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *
  * @author 罗立东 rod
  * @time 15/7/29
+ *
+ *
  */
 public class MasterListener implements Runnable {
 
@@ -39,7 +42,7 @@ public class MasterListener implements Runnable {
     /**
      * 监控的主机名称集合
      */
-    private Set<String> masterNames;
+    private List<String> masterNames;
 
     private String sentinelHost;
     private int sentinePort;
@@ -58,14 +61,14 @@ public class MasterListener implements Runnable {
      */
     private SentinelActor sentinelActor;
 
-    public MasterListener(Set<String> masterNames, String sentinelHost, int sentinePort, SentinelActor sentinelActor) {
+    public MasterListener(List<String> masterNames, String sentinelHost, int sentinePort, SentinelActor sentinelActor) {
         this.masterNames = masterNames;
         this.sentinelHost = sentinelHost;
         this.sentinePort = sentinePort;
         this.sentinelActor = sentinelActor;
     }
 
-    public MasterListener(Set<String> masterNames, String sentinelHost, int sentinePort, long subscribeRetryWaitTimeMillis, SentinelActor sentinelActor) {
+    public MasterListener(List<String> masterNames, String sentinelHost, int sentinePort, long subscribeRetryWaitTimeMillis, SentinelActor sentinelActor) {
         this(masterNames, sentinelHost, sentinePort, sentinelActor);
         this.subscribeRetryWaitTimeMillis = subscribeRetryWaitTimeMillis;
     }
@@ -111,11 +114,6 @@ public class MasterListener implements Runnable {
     }
 
 
-    private HostAndPort toHostAndPort(List<String> getMasterAddrByNameResult) {
-        String host = getMasterAddrByNameResult.get(0);
-        int port = Integer.parseInt(getMasterAddrByNameResult.get(1));
-        return new HostAndPort(host, port);
-    }
 
     /**
      * 监听事件回调
@@ -136,7 +134,7 @@ public class MasterListener implements Runnable {
                 } else if (messageArray[0].equals("master")) {
                     return;//master下线，忽略 ,等待+switch-master
                 } else { //从机下线
-                    HostAndPort downSlave = toHostAndPort(Arrays.asList(messageArray[2], messageArray[3]));
+                    HostAndPort downSlave = Utils.toHostAndPort(Arrays.asList(messageArray[2], messageArray[3]));
                     sentinelActor.sdownSlave(messageArray[5], downSlave);
                 }
 
@@ -149,7 +147,7 @@ public class MasterListener implements Runnable {
                 } else if (messageArray[0].equals("master")) {
                     return;//master上线，忽略 ,等待+switch-master （应该不会发生。。。）
                 } else { //从机上线
-                    HostAndPort nDownSlave = toHostAndPort(Arrays.asList(messageArray[2], messageArray[3]));
+                    HostAndPort nDownSlave = Utils.toHostAndPort(Arrays.asList(messageArray[2], messageArray[3]));
                     sentinelActor.nsdownSlave(messageArray[5], nDownSlave);
                 }
 
@@ -158,7 +156,7 @@ public class MasterListener implements Runnable {
             // switch master
             if (messageArray.length > 3) {
                 if (masterNames.contains(messageArray[0])) {
-                    HostAndPort newMaster = toHostAndPort(Arrays.asList(messageArray[3], messageArray[4]));
+                    HostAndPort newMaster = Utils.toHostAndPort(Arrays.asList(messageArray[3], messageArray[4]));
                     sentinelActor.switchMaster(messageArray[0], newMaster);
                 } else {
                     logger.info("Ignoring message on +switch-master for master name " + messageArray[0] + ".");

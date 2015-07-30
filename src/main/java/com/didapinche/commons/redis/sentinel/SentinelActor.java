@@ -2,6 +2,9 @@ package com.didapinche.commons.redis.sentinel;
 
 import redis.clients.jedis.HostAndPort;
 
+import java.util.List;
+import java.util.Map;
+
 /**
  * 定义了一些高可用的动作（failover等）
  *
@@ -15,19 +18,28 @@ public interface SentinelActor {
      * @param masterName
      * @param newMasterHostAndPort 新的master连接
      */
-    public void switchMaster(String masterName, HostAndPort newMasterHostAndPort);
+    void switchMaster(String masterName, HostAndPort newMasterHostAndPort);
 
     /**
      * 从机下线
      * @param masterName
      * @param hostAndPort
      */
-    public void sdownSlave(String masterName, HostAndPort hostAndPort);
+    void sdownSlave(String masterName, HostAndPort hostAndPort);
 
     /**
      * 从机上线
      * @param masterName
      * @param hostAndPort
      */
-    public void nsdownSlave(String masterName, HostAndPort hostAndPort);
+    void nsdownSlave(String masterName, HostAndPort hostAndPort);
+
+    /**
+     * 首次初始化主从信息
+     * @param masterName
+     * @param masterInfo
+     * @param slaveInfos
+     */
+    void buildMasterSlaveInfo(String masterName, HostAndPort masterInfo, List<Map<String, String>> slaveInfos);
+
 }
