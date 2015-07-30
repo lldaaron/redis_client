@@ -87,17 +87,17 @@ public final class MatrixRedisClient extends AbstractRedisClient{
     }
 
     @Override
-    protected <T> T execute(MultiKeyCallBack<T> callBack) {
+    protected <T> T execute(MultiKeyCallBack<T> callBack) throws MultiKeyRedisClientException {
         throw new MultiKeyRedisClientException();
     }
 
     @Override
-    protected <T> T execute(MultiKeyCallBack<T> callBack, boolean readonly) {
+    protected <T> T execute(MultiKeyCallBack<T> callBack, boolean readonly) throws MultiKeyRedisClientException {
         throw new MultiKeyRedisClientException();
     }
 
     @Override
-    protected <T> T execute(MultiKeyCallBack<T> callBack, boolean readonly, int retryTimes) {
+    protected <T> T execute(MultiKeyCallBack<T> callBack, boolean readonly, int retryTimes) throws MultiKeyRedisClientException {
         throw new MultiKeyRedisClientException();
     }
 

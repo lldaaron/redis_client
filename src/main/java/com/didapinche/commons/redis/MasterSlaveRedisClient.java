@@ -75,6 +75,21 @@ public final class MasterSlaveRedisClient extends AbstractRedisClient{
         }
     }
 
+    @Override
+    protected <T> T execute(MultiKeyCallBack<T> callBack) {
+        return null;
+    }
+
+    @Override
+    protected <T> T execute(MultiKeyCallBack<T> callBack, boolean readonly) {
+        return null;
+    }
+
+    @Override
+    protected <T> T execute(MultiKeyCallBack<T> callBack, boolean readonly, int retryTimes) {
+        return null;
+    }
+
 
     public void setAutoReadFromSlave(boolean autoReadFromSlave) {
         this.autoReadFromSlave = autoReadFromSlave;

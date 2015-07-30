@@ -9,42 +9,6 @@ import java.util.*;
 
 /**
  * RedisSentinelPool.java
- * ex:
- *<bean id ="redisSentinelPool" class="com.didapinche.commons.redis.RedisSentinelPool">
- *    <property name="jedisPoolConfig" ref="jedisPoolConfig"></property>
- *
- *    <property name="sentinelShards">
- *        <map >
- *            <entry key="master1">
- *                <bean class="com.didapinche.commons.redis.sentinel.SentinelInfo">
- *                    <property name="sentinels">
- *                        <set>
- *                            <value>127.0.0.1:26379</value>
- *                            <value>127.0.0.1:26380</value>
- *                            <value>127.0.0.1:26381</value>
- *                        </set>
- *                        </property>
- *                        <property name="weight" value="1"></property>
- *                        <property name="password" value="" ></property>
- *                </bean>
- *            </entry>
- *
- *            <entry key="master2">
- *                <bean class="com.didapinche.commons.redis.sentinel.SentinelInfo">
- *                    <property name="sentinels">
- *                        <set>
- *                            <value>127.0.0.1:26379</value>
- *                            <value>127.0.0.1:26380</value>
- *                            <value>127.0.0.1:26381</value>
- *                        </set>
- *                    </property>
- *                    <property name="weight" value="1"></property>
- *                    <property name="password" value="" ></property>
- *                </bean>
- *            </entry>
- *        </map>
- *    </property>
- *</bean>
  *
  * Project: redis client
  *
@@ -54,9 +18,6 @@ import java.util.*;
  */
 public class MatrixRedisPool implements RedisPool<ShardedJedis>, InitializingBean {
     private static final Logger logger = LoggerFactory.getLogger(MatrixRedisPool.class);
-    //记录当前线程使用的线程池，方便释放资源
-    private ThreadLocal<ShardedJedisPool> slavePoolTh = new ThreadLocal();
-
 
     private JedisPoolConfig jedisPoolConfig;
 
@@ -87,7 +48,7 @@ public class MatrixRedisPool implements RedisPool<ShardedJedis>, InitializingBea
 
     @Override
     public void returnMasterResourceObject(ShardedJedis jedis) {
-        masterShardedJedisPool.returnResourceObject(jedis);
+        jedis.close();
     }
 
     @Override
@@ -95,7 +56,6 @@ public class MatrixRedisPool implements RedisPool<ShardedJedis>, InitializingBea
 
         int index = new Random().nextInt(slaveShardedJedisPools.size());
         ShardedJedisPool pool = slaveShardedJedisPools.get(index);
-        slavePoolTh.set(pool);
 
         return pool.getResource();
     }
@@ -103,7 +63,7 @@ public class MatrixRedisPool implements RedisPool<ShardedJedis>, InitializingBea
 
     @Override
     public void returnSlaveResourceObject(ShardedJedis jedis) {
-        slavePoolTh.get().returnResourceObject(jedis);
+        jedis.close();
     }
 
     @Override
