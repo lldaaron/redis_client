@@ -15,7 +15,7 @@ import java.util.*;
  * Created by fengbin on 15/7/30.
  */
 public class SentinelsManager {
-    private static final Logger logger = LoggerFactory.getLogger(SentinelRedisClient.class);
+    private static final Logger logger = LoggerFactory.getLogger(SentinelsManager.class);
 
     //监听redisSentinel
     private Set<MasterListener> masterListeners = new HashSet<MasterListener>();

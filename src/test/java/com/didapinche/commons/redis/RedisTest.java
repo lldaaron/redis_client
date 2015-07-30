@@ -27,30 +27,30 @@ public class RedisTest extends RedisTestBase {
 
 
     }
-
-
-    @Test
-    public void testSentinel(){
-        redisSentinelClient.set("abc","1");
-        redisSentinelClient.incr("abc");
-        System.out.println(redisSentinelClient.get("abc"));
-
-        try {
-            int i= 0;
-            while (true) {
-                Thread.currentThread().sleep(10000l);
-                //System.out.println(redisSentinelClient.getRedisSentinelPool().getMasterResource());
-                //System.out.println(redisSentinelClient.getRedisSentinelPool().getSlaveResource());
-
-                i++;
-                redisSentinelClient.set("abc"+i,String.valueOf(i));
-                redisSentinelClient.incr("abc" + i);
-                System.out.println(redisSentinelClient.get("abc"+i));
-            }
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
+//
+//
+//    @Test
+//    public void testSentinel(){
+//        redisSentinelClient.set("abc","1");
+//        redisSentinelClient.incr("abc");
+//        System.out.println(redisSentinelClient.get("abc"));
+//
+//        try {
+//            int i= 0;
+//            while (true) {
+//                Thread.currentThread().sleep(10000l);
+//                //System.out.println(redisSentinelClient.getRedisSentinelPool().getMasterResource());
+//                //System.out.println(redisSentinelClient.getRedisSentinelPool().getSlaveResource());
+//
+//                i++;
+//                redisSentinelClient.set("abc"+i,String.valueOf(i));
+//                redisSentinelClient.incr("abc" + i);
+//                System.out.println(redisSentinelClient.get("abc"+i));
+//            }
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
+//    }
 
 
 }

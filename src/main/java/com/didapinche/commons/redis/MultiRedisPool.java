@@ -55,7 +55,7 @@ import java.util.*;
  * Copyright 2015 didapinche.com
  */
 public class MultiRedisPool implements ReidsPool<ShardedJedis>, InitializingBean {
-    private static final Logger logger = LoggerFactory.getLogger(SentinelRedisClient.class);
+    private static final Logger logger = LoggerFactory.getLogger(MultiRedisPool.class);
     //记录当前线程使用的线程池，方便释放资源
     private ThreadLocal<ShardedJedisPool> slavePoolTh = new ThreadLocal();
 
