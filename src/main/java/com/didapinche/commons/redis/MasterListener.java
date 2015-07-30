@@ -29,19 +29,19 @@ public class MasterListener extends Thread {
     protected AtomicBoolean running = new AtomicBoolean(false);
 
 
-    private RedisSentinelPool pool;
+    private ReidsPool pool;
 
     protected MasterListener() {
     }
 
-    public MasterListener(String masterName, String host, int port,RedisSentinelPool pool) {
+    public MasterListener(String masterName, String host, int port,ReidsPool pool) {
         this.masterName = masterName;
         this.host = host;
         this.port = port;
         this.pool = pool;
     }
 
-    public MasterListener(String masterName, String host, int port,RedisSentinelPool pool,
+    public MasterListener(String masterName, String host, int port,ReidsPool pool,
                           long subscribeRetryWaitTimeMillis) {
         this(masterName, host, port,pool);
         this.subscribeRetryWaitTimeMillis = subscribeRetryWaitTimeMillis;
@@ -95,7 +95,7 @@ public class MasterListener extends Thread {
                                 return;//忽略 “+sdown” ,等待+switch-master
                             } else {
                                 HostAndPort slave = Utils.toHostAndPort(Arrays.asList(switchMasterMsg[2], switchMasterMsg[3]));
-                                pool.$sdownSlave(masterName, slave);
+                                pool.nsdownSlave(masterName, slave);
                                 return;
                             }
 
