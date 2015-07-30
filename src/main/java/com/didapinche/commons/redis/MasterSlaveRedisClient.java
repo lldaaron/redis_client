@@ -20,14 +20,6 @@ public final class MasterSlaveRedisClient extends AbstractRedisClient{
 
     private MasterSlaveRedisPool pool;
 
-
-    protected  <T> T execute(CallBack<T> callBack) {
-        return execute(callBack,false);
-    }
-
-    protected <T> T execute(CallBack<T> callBack,boolean readonly){
-        return execute(callBack,readonly,0);
-    }
     protected <T> T execute(CallBack<T> callBack,boolean readonly,int retryTimes){
 
         retryTimes ++;
@@ -38,7 +30,7 @@ public final class MasterSlaveRedisClient extends AbstractRedisClient{
             throw new RedisClientException("have retried 3 times for redis command");
         }
 
-       if (readonly && autoReadFromSlave && pool.getMasterJedisPool()!= null) {
+       if (readonly && autoReadFromSlave && pool.hasSlave()) {
             Jedis jedis = null;
 
             try {
@@ -53,7 +45,7 @@ public final class MasterSlaveRedisClient extends AbstractRedisClient{
                 }
             }
 
-        } else if (pool.getSlaveJedisPool() != null) {
+        } else {
 
             Jedis jedis = null;
 
@@ -69,10 +61,12 @@ public final class MasterSlaveRedisClient extends AbstractRedisClient{
                     pool.returnMasterResourceObject(jedis);
                 }
             }
-
-        } else {
-            throw new RedisClientException("jedisPool or masterShards master configured one.");
         }
+    }
+
+    @Override
+    protected <T> T execute(MultiKeyCallBack<T> callBack, boolean readonly, int retryTimes) {
+        return null;
     }
 
 
