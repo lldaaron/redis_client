@@ -120,4 +120,8 @@ public final class MasterSlaveRedisClient extends AbstractRedisClient {
     public void setPool(MasterSlaveRedisPool pool) {
         this.pool = pool;
     }
+
+    public MasterSlaveRedisPool getPool() {
+        return pool;
+    }
 }

@@ -158,7 +158,7 @@ public class MasterSlaveRedisPool implements RedisPool<Jedis>, InitializingBean 
     @Override
     public Jedis getSlaveResource() {
         int index = randomSlaveIndex.nextInt(slaveHaps.size());
-        JedisPool jedisPool = slaveJedisPoolMap.get(slaveHaps.indexOf(index));
+        JedisPool jedisPool = slaveJedisPoolMap.get(slaveHaps.get(index));
         return jedisPool.getResource();
     }
 
@@ -169,6 +169,8 @@ public class MasterSlaveRedisPool implements RedisPool<Jedis>, InitializingBean 
 
     @Override
     public void afterPropertiesSet() throws Exception {
+        if (masterHap == null)
+            return;
         initPool();
     }
 
