@@ -1,4 +1,4 @@
-package com.didapinche.commons.redis;
+package com.didapinche.commons.redis.sentinel;
 
 import java.util.List;
 import java.util.Set;

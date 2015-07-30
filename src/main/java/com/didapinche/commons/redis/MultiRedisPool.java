@@ -18,7 +18,7 @@ import java.util.*;
  *    <property name="sentinelShards">
  *        <map >
  *            <entry key="master1">
- *                <bean class="com.didapinche.commons.redis.SentinelInfo">
+ *                <bean class="com.didapinche.commons.redis.sentinel.SentinelInfo">
  *                    <property name="sentinels">
  *                        <set>
  *                            <value>127.0.0.1:26379</value>
@@ -32,7 +32,7 @@ import java.util.*;
  *            </entry>
  *
  *            <entry key="master2">
- *                <bean class="com.didapinche.commons.redis.SentinelInfo">
+ *                <bean class="com.didapinche.commons.redis.sentinel.SentinelInfo">
  *                    <property name="sentinels">
  *                        <set>
  *                            <value>127.0.0.1:26379</value>
@@ -54,7 +54,7 @@ import java.util.*;
  *
  * Copyright 2015 didapinche.com
  */
-public class MultiRedisPool implements InitializingBean {
+public class MultiRedisPool implements ReidsPool<ShardedJedis>, InitializingBean {
     private static final Logger logger = LoggerFactory.getLogger(SentinelRedisClient.class);
     //记录当前线程使用的线程池，方便释放资源
     private ThreadLocal<ShardedJedisPool> slavePoolTh = new ThreadLocal();
@@ -77,22 +77,22 @@ public class MultiRedisPool implements InitializingBean {
     }
 
 
-    /**
-     * 是否存在slave
-     * @return
-     */
+    @Override
     public boolean hasSlave(){
         return (slaveShardedJedisPools != null && slaveShardedJedisPools.size() >0);
     }
 
+    @Override
     public ShardedJedis getMasterResource(){
         return masterShardedJedisPool.getResource();
     }
+
+    @Override
     public void returnMasterResourceObject(ShardedJedis jedis) {
         masterShardedJedisPool.returnResourceObject(jedis);
     }
 
-
+    @Override
     public ShardedJedis getSlaveResource(){
 
         int index = new Random().nextInt(slaveShardedJedisPools.size());
@@ -103,15 +103,10 @@ public class MultiRedisPool implements InitializingBean {
     }
 
 
-
+    @Override
     public void returnSlaveResourceObject(ShardedJedis jedis) {
         slavePoolTh.get().returnResourceObject(jedis);
     }
-
-
-
-
-
 
 
     private void initMasterPool(List<JedisShardInfo> masterShards) {
@@ -120,9 +115,14 @@ public class MultiRedisPool implements InitializingBean {
         }
     }
 
+
+    @Override
     public  void initSlavePool(){
         initSlavePool(multiSlaveShards);
     }
+
+
+
 
 
 
@@ -155,9 +155,14 @@ public class MultiRedisPool implements InitializingBean {
     }
 
 
-
+    @Override
     public  void initPool(){
         initPool(new ArrayList<JedisShardInfo>(masterShards.values()),multiSlaveShards);
+    }
+
+    @Override
+    public void initMasterPool() {
+
     }
 
     private void initPool(List<JedisShardInfo> masterShards,Map<String,List<JedisShardInfo>> multiSlaveShards){
@@ -168,22 +173,8 @@ public class MultiRedisPool implements InitializingBean {
     }
 
 
-
-    public void switchMaster(String masterName, HostAndPort masterInfo){
-
-        buildMasterShardInfos(masterName, masterInfo);
-        initMasterPool(new ArrayList<JedisShardInfo>(masterShards.values()));
-
-    }
-
-
-    public void buildMasterShardInfos(String masterName, HostAndPort masterInfo){
-        JedisShardInfo masterShardInfo = new JedisShardInfo(masterInfo.getHost(),masterInfo.getPort());
-
-        masterShards.put(masterName,masterShardInfo);
-    }
-
-    public void buildShardInfos(String masterName, HostAndPort masterInfo, List<Map<String, String>> slaveInfos){
+    @Override
+    public void buildMasterSlaveInfo(String masterName, HostAndPort masterInfo, List<Map<String, String>> slaveInfos) {
         buildMasterShardInfos(masterName,masterInfo);
 
         List<JedisShardInfo> jedisShardInfos= new ArrayList<>();
@@ -202,8 +193,15 @@ public class MultiRedisPool implements InitializingBean {
         initPool();
     }
 
+    @Override
+    public void switchMaster(String masterName, HostAndPort masterInfo){
 
+        buildMasterShardInfos(masterName, masterInfo);
+        initMasterPool(new ArrayList<JedisShardInfo>(masterShards.values()));
 
+    }
+
+    @Override
     public void sdownSlave(String masterName,HostAndPort hostAndPort){
         List<JedisShardInfo> slaveInfos = multiSlaveShards.get(masterName);
 
@@ -217,8 +215,11 @@ public class MultiRedisPool implements InitializingBean {
         initSlavePool();
     }
 
+
+
     // 对应sentinel －sdown
-    public void $sdownSlave(String masterName,HostAndPort hostAndPort){
+    @Override
+    public void nsdownSlave(String masterName,HostAndPort hostAndPort){
         List<JedisShardInfo> slaveInfos = multiSlaveShards.get(masterName);
 
         for(JedisShardInfo shardInfo:slaveInfos ){
@@ -231,6 +232,15 @@ public class MultiRedisPool implements InitializingBean {
 
         initSlavePool();
     }
+
+
+    public void buildMasterShardInfos(String masterName, HostAndPort masterInfo){
+        JedisShardInfo masterShardInfo = new JedisShardInfo(masterInfo.getHost(),masterInfo.getPort());
+
+        masterShards.put(masterName,masterShardInfo);
+    }
+
+
 
 
 
