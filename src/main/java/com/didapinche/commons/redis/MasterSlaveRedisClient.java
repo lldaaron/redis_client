@@ -1,10 +1,9 @@
 package com.didapinche.commons.redis;
 
-import com.didapinche.commons.redis.exceptions.DiDaRedisClientException;
+import com.didapinche.commons.redis.exceptions.RedisClientException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.jedis.Jedis;
-import redis.clients.jedis.ShardedJedis;
 
 
 /**
@@ -36,7 +35,7 @@ public final class MasterSlaveRedisClient extends AbstractRedisClient{
         if(retryTimes > 3 ) {
 
             logger.error("have retried 3 times for redis command");
-            throw new DiDaRedisClientException("have retried 3 times for redis command");
+            throw new RedisClientException("have retried 3 times for redis command");
         }
 
        if (readonly && autoReadFromSlave && pool.getMasterJedisPool()!= null) {
@@ -72,7 +71,7 @@ public final class MasterSlaveRedisClient extends AbstractRedisClient{
             }
 
         } else {
-            throw new DiDaRedisClientException("jedisPool or masterShards master configured one.");
+            throw new RedisClientException("jedisPool or masterShards master configured one.");
         }
     }
 

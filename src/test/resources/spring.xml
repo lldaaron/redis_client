@@ -40,7 +40,7 @@
 
 
 
-    <bean id="muiltRedisPool" class="com.didapinche.commons.redis.MultiRedisPool">
+    <bean id="muiltRedisPool" class="com.didapinche.commons.redis.MatrixRedisPool">
         <property name="jedisPoolConfig" ref="jedisPoolConfig"></property>
         <!--<property name="masterShards">-->
             <!--<map>-->
@@ -94,12 +94,12 @@
 
 
 
-    <bean id="muiltRedisClient" class="com.didapinche.commons.redis.MultiRedisClient">
+    <bean id="muiltRedisClient" class="com.didapinche.commons.redis.MatrixRedisClient">
         <property name="redisPool" ref="muiltRedisPool"></property>
     </bean>
 
 
-    <bean id ="redisSentinelPool" class="com.didapinche.commons.redis.sentinel.SentinelsManager">
+    <bean id ="sentinelsManager" class="com.didapinche.commons.redis.sentinel.SentinelsManager">
         <property name="reidsPool" ref="muiltRedisPool"></property>
         <property name="sentinelInfo">
             <bean class="com.didapinche.commons.redis.sentinel.SentinelInfo">

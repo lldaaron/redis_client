@@ -1,9 +1,11 @@
 package com.didapinche.commons.redis;
 
-import com.didapinche.commons.redis.exceptions.DiDaRedisClientException;
+import com.didapinche.commons.redis.exceptions.MultiKeyRedisClientException;
+import com.didapinche.commons.redis.exceptions.RedisClientException;
 import redis.clients.jedis.*;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -14,7 +16,7 @@ import java.util.Set;
  *
  * Copyright 2015 didapinche.com
  */
-public abstract class AbstractRedisClient implements RedisClient {
+public abstract class AbstractRedisClient implements RedisClient{
 
     /**
      * 是否读写分离
@@ -32,6 +34,19 @@ public abstract class AbstractRedisClient implements RedisClient {
 
 
     protected abstract <T> T execute(CallBack<T> callBack, boolean readonly,int retryTimes);
+
+
+    protected static interface MultiKeyCallBack<T>{
+        T execute(MultiKeyCommands jedis);
+    }
+
+    protected abstract  <T> T execute(MultiKeyCallBack<T> callBack);
+
+    protected abstract  <T> T execute(MultiKeyCallBack<T> callBack,boolean readonly);
+
+
+    protected abstract <T> T execute(MultiKeyCallBack<T> callBack, boolean readonly,int retryTimes);
+
 
     public String set(final String key, final String value) {
         return execute(new CallBack<String>() {
@@ -299,7 +314,7 @@ public abstract class AbstractRedisClient implements RedisClient {
                 } else if (jedis instanceof ShardedJedis){
                    return ((ShardedJedis) jedis).hincrByFloat(key, field, value);
                 } else{
-                    throw new DiDaRedisClientException("error jedis type");
+                    throw new RedisClientException("error jedis type");
                 }
             }
         });
@@ -1009,4 +1024,415 @@ public abstract class AbstractRedisClient implements RedisClient {
 
 
 
+
+    @Override
+    public Long del(final String... keys) throws RedisClientException {
+
+        return execute(new MultiKeyCallBack<Long>(){
+
+            @Override
+            public Long execute(MultiKeyCommands jedis) {
+                return jedis.del(keys);
+            }
+        });
+    }
+
+    @Override
+    public List<String> blpop(final int timeout, final String... keys) {
+
+        return execute(new MultiKeyCallBack<List<String>>(){
+
+            @Override
+            public List<String> execute(MultiKeyCommands jedis) {
+                return jedis.blpop(timeout,keys);
+            }
+        });
+    }
+
+    @Override
+    public List<String> brpop(final int timeout, final String... keys) {
+        return execute(new MultiKeyCallBack<List<String>>(){
+
+            @Override
+            public List<String> execute(MultiKeyCommands jedis) {
+                return jedis.brpop(timeout, keys);
+            }
+        });
+    }
+
+    @Override
+    public List<String> blpop(final String... args) {
+        return execute(new MultiKeyCallBack<List<String>>(){
+
+            @Override
+            public List<String> execute(MultiKeyCommands jedis) {
+                return jedis.blpop(args);
+            }
+        });
+    }
+
+    @Override
+    public List<String> brpop(final String... args) {
+        return execute(new MultiKeyCallBack<List<String>>(){
+
+            @Override
+            public List<String> execute(MultiKeyCommands jedis) {
+                return jedis.brpop(args);
+            }
+        });
+    }
+
+    @Override
+    public Set<String> keys(final String pattern) {
+        return execute(new MultiKeyCallBack<Set<String>>(){
+
+            @Override
+            public Set<String> execute(MultiKeyCommands jedis) {
+                return jedis.keys(pattern);
+            }
+        });
+    }
+
+    @Override
+    public List<String> mget(final String... keys) {
+        return execute(new MultiKeyCallBack<List<String>>(){
+
+            @Override
+            public List<String> execute(MultiKeyCommands jedis) {
+                return jedis.mget(keys);
+            }
+        });
+    }
+
+    @Override
+    public String mset(final String... keysvalues) {
+        return execute(new MultiKeyCallBack<String>(){
+
+            @Override
+            public String execute(MultiKeyCommands jedis) {
+                return jedis.mset(keysvalues);
+            }
+        });
+    }
+
+    @Override
+    public Long msetnx(final String... keysvalues) {
+        return execute(new MultiKeyCallBack<Long>(){
+
+            @Override
+            public Long execute(MultiKeyCommands jedis) {
+                return jedis.msetnx(keysvalues);
+            }
+        });
+    }
+
+    @Override
+    public String rename(final String oldkey, final String newkey) {
+        return execute(new MultiKeyCallBack<String>(){
+
+            @Override
+            public String execute(MultiKeyCommands jedis) {
+                return jedis.rename(oldkey,newkey);
+            }
+        });
+    }
+
+    @Override
+    public Long renamenx(final String oldkey, final String newkey) {
+        return execute(new MultiKeyCallBack<Long>(){
+
+            @Override
+            public Long execute(MultiKeyCommands jedis) {
+                return jedis.renamenx(oldkey,newkey);
+            }
+        });
+    }
+
+    @Override
+    public String rpoplpush(final String srckey, final String dstkey) {
+        return execute(new MultiKeyCallBack<String>(){
+
+            @Override
+            public String execute(MultiKeyCommands jedis) {
+                return jedis.rpoplpush(srckey, dstkey);
+            }
+        });
+    }
+
+    @Override
+    public Set<String> sdiff(final String... keys) {
+        return execute(new MultiKeyCallBack<Set<String>>(){
+
+            @Override
+            public Set<String> execute(MultiKeyCommands jedis) {
+                return jedis.sdiff(keys);
+            }
+        });
+    }
+
+    @Override
+    public Long sdiffstore(final String dstkey, final String... keys) {
+        return execute(new MultiKeyCallBack<Long>(){
+
+            @Override
+            public Long execute(MultiKeyCommands jedis) {
+                return jedis.sdiffstore(dstkey,keys);
+            }
+        });
+    }
+
+    @Override
+    public Set<String> sinter(final String... keys) {
+        return execute(new MultiKeyCallBack<Set<String>>(){
+
+            @Override
+            public Set<String> execute(MultiKeyCommands jedis) {
+                return jedis.sinter(keys);
+            }
+        });
+    }
+
+    @Override
+    public Long sinterstore(final String dstkey, final String... keys) {
+        return execute(new MultiKeyCallBack<Long>(){
+
+            @Override
+            public Long execute(MultiKeyCommands jedis) {
+                return jedis.sinterstore(dstkey, keys);
+            }
+        });
+    }
+
+    @Override
+    public Long smove(final String srckey, final String dstkey, final String member) {
+        return execute(new MultiKeyCallBack<Long>(){
+
+            @Override
+            public Long execute(MultiKeyCommands jedis) {
+                return jedis.smove(srckey, dstkey, member);
+            }
+        });
+    }
+
+    @Override
+    public Long sort(final String key, final SortingParams sortingParameters, final String dstkey) {
+        return execute(new MultiKeyCallBack<Long>(){
+
+            @Override
+            public Long execute(MultiKeyCommands jedis) {
+                return jedis.sort(key, sortingParameters, dstkey);
+            }
+        });
+    }
+
+    @Override
+    public Long sort(final String key, final String dstkey) {
+        return execute(new MultiKeyCallBack<Long>(){
+
+            @Override
+            public Long execute(MultiKeyCommands jedis) {
+                return jedis.sort(key, dstkey);
+            }
+        });
+    }
+
+    @Override
+    public Set<String> sunion(final String... keys) {
+        return execute(new MultiKeyCallBack<Set<String>>(){
+
+            @Override
+            public Set<String> execute(MultiKeyCommands jedis) {
+                return jedis.sunion(keys);
+            }
+        });
+    }
+
+    @Override
+    public Long sunionstore(final String dstkey, final String... keys) {
+        return execute(new MultiKeyCallBack<Long>(){
+
+            @Override
+            public Long execute(MultiKeyCommands jedis) {
+                return jedis.sunionstore(dstkey, keys);
+            }
+        });
+    }
+
+    @Override
+    public String watch(final String... keys) {
+        return execute(new MultiKeyCallBack<String>(){
+
+            @Override
+            public String execute(MultiKeyCommands jedis) {
+                return jedis.watch(keys);
+            }
+        });
+    }
+
+    @Override
+    public String unwatch() {
+        return execute(new MultiKeyCallBack<String>(){
+
+            @Override
+            public String execute(MultiKeyCommands jedis) {
+                return jedis.unwatch();
+            }
+        });
+    }
+
+    @Override
+    public Long zinterstore(final String dstkey, final String... sets) {
+        return execute(new MultiKeyCallBack<Long>(){
+
+            @Override
+            public Long execute(MultiKeyCommands jedis) {
+                return jedis.zinterstore(dstkey,sets);
+            }
+        });
+    }
+
+    @Override
+    public Long zinterstore(final String dstkey, final ZParams params, final String... sets) {
+        return execute(new MultiKeyCallBack<Long>(){
+
+            @Override
+            public Long execute(MultiKeyCommands jedis) {
+                return jedis.zinterstore(dstkey,params,sets);
+            }
+        });
+    }
+
+    @Override
+    public Long zunionstore(final String dstkey, final String... sets) {
+        return execute(new MultiKeyCallBack<Long>(){
+
+            @Override
+            public Long execute(MultiKeyCommands jedis) {
+                return jedis.zunionstore(dstkey, sets);
+            }
+        });
+    }
+
+    @Override
+    public Long zunionstore(final String dstkey, final ZParams params, final String... sets) {
+        return execute(new MultiKeyCallBack<Long>(){
+
+            @Override
+            public Long execute(MultiKeyCommands jedis) {
+                return jedis.zunionstore(dstkey,params, sets);
+            }
+        });
+    }
+
+    @Override
+    public String brpoplpush(final String source, final String destination, final int timeout) {
+        return execute(new MultiKeyCallBack<String>(){
+
+            @Override
+            public String execute(MultiKeyCommands jedis) {
+                return jedis.brpoplpush(source, destination, timeout);
+            }
+        });
+    }
+
+    @Override
+    public Long publish(final String channel, final String message) {
+        return execute(new MultiKeyCallBack<Long>(){
+
+            @Override
+            public Long execute(MultiKeyCommands jedis) {
+                return jedis.publish(channel, message);
+            }
+        });
+    }
+
+    @Override
+    public void subscribe(final JedisPubSub jedisPubSub, final String... channels) {
+         execute(new MultiKeyCallBack<Integer>(){
+
+            @Override
+            public Integer execute(MultiKeyCommands jedis) {
+                 jedis.subscribe(jedisPubSub, channels);
+                return 0;
+            }
+        });
+    }
+
+    @Override
+    public void psubscribe(final JedisPubSub jedisPubSub, final String... patterns) {
+        execute(new MultiKeyCallBack<Integer>(){
+
+            @Override
+            public Integer execute(MultiKeyCommands jedis) {
+                jedis.psubscribe(jedisPubSub, patterns);
+                return 0;
+            }
+        });
+    }
+
+    @Override
+    public String randomKey() {
+        return execute(new MultiKeyCallBack<String>(){
+
+            @Override
+            public String execute(MultiKeyCommands jedis) {
+                return jedis.randomKey();
+            }
+        });
+    }
+
+    @Override
+    public Long bitop(final BitOP op, final String destKey, final String... srcKeys) {
+        return execute(new MultiKeyCallBack<Long>(){
+
+            @Override
+            public Long execute(MultiKeyCommands jedis) {
+                return jedis.bitop(op, destKey, srcKeys);
+            }
+        });
+    }
+
+    @Override
+    public ScanResult<String> scan(final int cursor) {
+        return execute(new MultiKeyCallBack<ScanResult<String>>(){
+
+            @Override
+            public ScanResult<String> execute(MultiKeyCommands jedis) {
+                return jedis.scan(cursor);
+            }
+        });
+    }
+
+    @Override
+    public ScanResult<String> scan(final String cursor) {
+        return execute(new MultiKeyCallBack<ScanResult<String>>(){
+
+            @Override
+            public ScanResult<String> execute(MultiKeyCommands jedis) {
+                return jedis.scan(cursor);
+            }
+        });
+    }
+
+    @Override
+    public String pfmerge(final String destkey, final String... sourcekeys) {
+        return execute(new MultiKeyCallBack<String>(){
+
+            @Override
+            public String execute(MultiKeyCommands jedis) {
+                return jedis.pfmerge(destkey,sourcekeys);
+            }
+        });
+    }
+
+    @Override
+    public long pfcount(final String... keys) {
+        return execute(new MultiKeyCallBack<Long>(){
+
+            @Override
+            public Long execute(MultiKeyCommands jedis) {
+                return jedis.pfcount(keys);
+            }
+        });
+    }
 }

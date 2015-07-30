@@ -1,6 +1,7 @@
 package com.didapinche.commons.redis;
 
-import com.didapinche.commons.redis.exceptions.DiDaRedisClientException;
+import com.didapinche.commons.redis.exceptions.MultiKeyRedisClientException;
+import com.didapinche.commons.redis.exceptions.RedisClientException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.jedis.ShardedJedis;
@@ -12,9 +13,9 @@ import redis.clients.jedis.ShardedJedis;
  *
  * Copyright 2015 didapinche.com
  */
-public final class MultiRedisClient extends AbstractRedisClient{
+public final class MatrixRedisClient extends AbstractRedisClient{
 
-    private static Logger logger = LoggerFactory.getLogger(MultiRedisClient.class);
+    private static Logger logger = LoggerFactory.getLogger(MatrixRedisClient.class);
 
 
 
@@ -38,7 +39,7 @@ public final class MultiRedisClient extends AbstractRedisClient{
         if(retryTimes > 3) {
 
             logger.error("have retried 3 times for redis command");
-            throw new DiDaRedisClientException("have retried 3 times for redis command");
+            throw new RedisClientException("have retried 3 times for redis command");
         }
 
         if (readonly && autoReadFromSlave && redisPool.hasSlave()) {
@@ -83,6 +84,21 @@ public final class MultiRedisClient extends AbstractRedisClient{
             }
 
         }
+    }
+
+    @Override
+    protected <T> T execute(MultiKeyCallBack<T> callBack) {
+        throw new MultiKeyRedisClientException();
+    }
+
+    @Override
+    protected <T> T execute(MultiKeyCallBack<T> callBack, boolean readonly) {
+        throw new MultiKeyRedisClientException();
+    }
+
+    @Override
+    protected <T> T execute(MultiKeyCallBack<T> callBack, boolean readonly, int retryTimes) {
+        throw new MultiKeyRedisClientException();
     }
 
 
