@@ -17,18 +17,23 @@
 
     <bean id="masterSlaveRedisPool" class="com.didapinche.commons.redis.MasterSlaveRedisPool">
         <property name="jedisPoolConfig" ref="jedisPoolConfig"></property>
-        <property name="masterJedisPool">
-            <bean class="redis.clients.jedis.JedisPool">
-                <constructor-arg name="host" value="127.0.0.1"></constructor-arg>
-                <constructor-arg name="port" value="6379"></constructor-arg>
+        <property name="masterHap">
+            <bean class="redis.clients.jedis.HostAndPort">
+                <constructor-arg name="host" value="127.0.0.1"/>
+                <constructor-arg name="port" value="6379"/>
             </bean>
         </property>
-
-        <property name="slaveJedisPool">
-            <bean class="redis.clients.jedis.JedisPool">
-                <constructor-arg name="host" value="127.0.0.1"></constructor-arg>
-                <constructor-arg name="port" value="6380"></constructor-arg>
-            </bean>
+        <property name="slaveHaps">
+            <list>
+                <bean class="redis.clients.jedis.HostAndPort">
+                    <constructor-arg name="host" value="127.0.0.1"/>
+                    <constructor-arg name="port" value="6380"/>
+                </bean>
+                <bean class="redis.clients.jedis.HostAndPort">
+                    <constructor-arg name="host" value="127.0.0.1"/>
+                    <constructor-arg name="port" value="6381"/>
+                </bean>
+            </list>
         </property>
     </bean>
 
