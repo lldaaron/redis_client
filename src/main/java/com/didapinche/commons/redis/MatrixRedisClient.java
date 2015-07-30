@@ -22,17 +22,6 @@ public final class MatrixRedisClient extends AbstractRedisClient{
     private RedisPool<ShardedJedis> redisPool;
 
     @Override
-    protected <T> T execute(CallBack<T> callBack) {
-        return execute(callBack,false);
-    }
-
-    @Override
-    protected <T> T execute(CallBack<T> callBack, boolean readonly) {
-        return execute(callBack,false,0);
-
-    }
-
-    @Override
     protected <T> T execute(CallBack<T> callBack, boolean readonly,int retryTimes) {
         retryTimes ++;
 
@@ -87,17 +76,7 @@ public final class MatrixRedisClient extends AbstractRedisClient{
     }
 
     @Override
-    protected <T> T execute(MultiKeyCallBack<T> callBack) throws MultiKeyRedisClientException {
-        throw new MultiKeyRedisClientException();
-    }
-
-    @Override
-    protected <T> T execute(MultiKeyCallBack<T> callBack, boolean readonly) throws MultiKeyRedisClientException {
-        throw new MultiKeyRedisClientException();
-    }
-
-    @Override
-    protected <T> T execute(MultiKeyCallBack<T> callBack, boolean readonly, int retryTimes) throws MultiKeyRedisClientException {
+    protected <T> T execute(MultiKeyCallBack<T> callBack, boolean readonly, int retryTimes) {
         throw new MultiKeyRedisClientException();
     }
 

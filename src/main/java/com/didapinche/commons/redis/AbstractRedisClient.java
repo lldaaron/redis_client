@@ -28,9 +28,13 @@ public abstract class AbstractRedisClient implements RedisClient{
         T execute(JedisCommands jedis);
     }
 
-    protected abstract  <T> T execute(CallBack<T> callBack);
+    protected  <T> T execute(CallBack<T> callBack) {
+        return execute(callBack,false);
+    }
 
-    protected abstract  <T> T execute(CallBack<T> callBack,boolean readonly);
+    protected  <T> T execute(CallBack<T> callBack,boolean readonly) {
+        return execute(callBack,readonly,0);
+    }
 
 
     protected abstract <T> T execute(CallBack<T> callBack, boolean readonly,int retryTimes);
@@ -40,9 +44,13 @@ public abstract class AbstractRedisClient implements RedisClient{
         T execute(MultiKeyCommands jedis);
     }
 
-    protected abstract  <T> T execute(MultiKeyCallBack<T> callBack) throws MultiKeyRedisClientException;
+    protected <T> T execute(MultiKeyCallBack<T> callBack) {
+        return execute(callBack,false);
+    }
 
-    protected abstract  <T> T execute(MultiKeyCallBack<T> callBack,boolean readonly) throws MultiKeyRedisClientException;
+    protected <T> T execute(MultiKeyCallBack<T> callBack,boolean readonly) {
+        return execute(callBack,readonly,0);
+    }
 
 
     protected abstract <T> T execute(MultiKeyCallBack<T> callBack, boolean readonly,int retryTimes) throws MultiKeyRedisClientException;
