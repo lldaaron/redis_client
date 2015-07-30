@@ -106,6 +106,19 @@ public class MultiRedisPool implements RedisPool<ShardedJedis>, InitializingBean
         slavePoolTh.get().returnResourceObject(jedis);
     }
 
+    @Override
+    public  void initPool(){
+        initMasterPool();
+
+        initSlavePool();
+    }
+
+
+
+    @Override
+    public void initMasterPool() {
+        initMasterPool(new ArrayList<JedisShardInfo>(masterShards.values()));
+    }
 
     private void initMasterPool(List<JedisShardInfo> masterShards) {
         if( masterShards != null && masterShards.size() > 0) {
@@ -118,10 +131,6 @@ public class MultiRedisPool implements RedisPool<ShardedJedis>, InitializingBean
     public  void initSlavePool(){
         initSlavePool(multiSlaveShards);
     }
-
-
-
-
 
 
     private void initSlavePool(Map<String,List<JedisShardInfo>> multiSlaveShards) {
@@ -153,22 +162,8 @@ public class MultiRedisPool implements RedisPool<ShardedJedis>, InitializingBean
     }
 
 
-    @Override
-    public  void initPool(){
-        initPool(new ArrayList<JedisShardInfo>(masterShards.values()),multiSlaveShards);
-    }
 
-    @Override
-    public void initMasterPool() {
 
-    }
-
-    private void initPool(List<JedisShardInfo> masterShards,Map<String,List<JedisShardInfo>> multiSlaveShards){
-
-        initMasterPool(masterShards);
-
-        initSlavePool(multiSlaveShards);
-    }
 
 
     @Override

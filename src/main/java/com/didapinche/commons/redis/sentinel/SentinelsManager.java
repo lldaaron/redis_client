@@ -88,9 +88,12 @@ public class SentinelsManager {
                 }
             }
 
+            //构建一个masterName
             reidsPool.buildMasterSlaveInfo(masterName, master, slaveInfo);
         }
 
+        //初始化线程池
+        reidsPool.initPool();
 
 
 
@@ -103,7 +106,6 @@ public class SentinelsManager {
             new Thread(masterListener).start();
         }
 
-        reidsPool.initPool();
     }
 
 
