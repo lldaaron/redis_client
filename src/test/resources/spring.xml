@@ -83,7 +83,7 @@
         <property name="sentinelShards">
             <map >
                 <entry key="master1">
-                    <bean class="com.didapinche.commons.redis.SentinelInfo">
+                    <bean class="com.didapinche.commons.redis.sentinel.SentinelInfo">
                         <property name="sentinels">
                             <set>
                                 <value>127.0.0.1:26379</value>
@@ -97,7 +97,7 @@
                 </entry>
 
                 <entry key="master2">
-                    <bean class="com.didapinche.commons.redis.SentinelInfo">
+                    <bean class="com.didapinche.commons.redis.sentinel.SentinelInfo">
                         <property name="sentinels">
                             <set>
                                 <value>127.0.0.1:26379</value>
