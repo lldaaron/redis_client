@@ -1,5 +1,6 @@
 package com.didapinche.commons.redis;
 
+import com.didapinche.commons.redis.sentinel.SentinelsManager;
 import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,6 +10,9 @@ import redis.clients.jedis.Jedis;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author 罗立东 rod
@@ -45,12 +49,12 @@ public class MasterSlaveRedisTest extends RedisTestBase {
     }
 
     /**
-     * HA主动发现 初始化
+     * HA主动发现 自动配置初始化
      */
     @Test
-    public void testHAInit() throws InterruptedException {
+    public void testHAInitAutoConf() throws InterruptedException {
         //初始化sentinelsManager
-        applicationContext.getBean("sentinelsManager");
+        SentinelsManager sentinelsManager = (SentinelsManager) applicationContext.getBean("sentinelsManager");
 
         Jedis sentinelJedis = (Jedis) applicationContext.getBean("sentinelJedis");
 
@@ -59,22 +63,18 @@ public class MasterSlaveRedisTest extends RedisTestBase {
 
         MasterSlaveRedisPool masterSlaveRedisPool = clientWithSentinel.getPool();
 
+        //sentinelsManager需要管理的mastername
+        String masterName = sentinelsManager.getSentinelInfo().getMasterNames().get(0);
 
         //获取master info
-        List<Map<String, String>> mastersInfo = sentinelJedis.sentinelMasters();
+        List<String> masterInfo = sentinelJedis.sentinelGetMasterAddrByName(masterName);
 
-        //验证master数量
-        Assert.assertEquals(1, mastersInfo.size());
-
-        Map<String, String> masterInfo = mastersInfo.get(0);
-
-        String masterName = masterInfo.get("name");
-        String masterHost = masterInfo.get("ip");
-        int masterPort = Integer.parseInt(masterInfo.get("port"));
+        String masterHost = masterInfo.get(0);
+        int masterPort = Integer.parseInt(masterInfo.get(1));
 
         //比对master
         HostAndPort masterHap = masterSlaveRedisPool.getMasterHap();
-        Assert.assertTrue(masterHap.equals(new HostAndPort(masterHost,masterPort)));
+        Assert.assertTrue(masterHap.equals(new HostAndPort(masterHost, masterPort)));
 
         //获取slave info
         List<Map<String, String>> slavesInfo = sentinelJedis.sentinelSlaves(masterName);
@@ -82,7 +82,7 @@ public class MasterSlaveRedisTest extends RedisTestBase {
         List<HostAndPort> slavesHap = masterSlaveRedisPool.getSlaveHaps();
 
         //验证slave数量
-        Assert.assertEquals(slavesHap.size(),slavesInfo.size());
+        Assert.assertEquals(slavesHap.size(), slavesInfo.size());
 
         for (Map<String, String> slaveInfo : slavesInfo) {
             String slaveHost = slaveInfo.get("ip");
@@ -91,8 +91,81 @@ public class MasterSlaveRedisTest extends RedisTestBase {
             slavesHap.remove(slaveHap);
         }
 
-        Assert.assertEquals(0,slavesHap.size());
+        Assert.assertEquals(0, slavesHap.size());
+
     }
 
 
+    /**
+     * 在读写的情况下 slave下线
+     */
+    @Test
+    public void testHAsdownSlaveWhenReadAndWrite() throws InterruptedException {
+        //初始化sentinelsManager
+        applicationContext.getBean("sentinelsManager");
+        final Jedis slaveJedis80 = (Jedis) applicationContext.getBean("slaveJedis80");
+        final Jedis slaveJedis81 = (Jedis) applicationContext.getBean("slaveJedis81");
+
+        //wait to conf
+        Thread.sleep(1000);
+
+        //begin slave down after 2s
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Thread.sleep(2 * 1000L);
+                    slaveJedis80.shutdown();
+                    logger.info("shutdown the slave 80");
+                    Thread.sleep(1 * 1000L);
+                    slaveJedis81.shutdown();
+                    logger.info("shutdown the slave 81");
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
+
+        //begin read and write
+
+        ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(10);
+
+        for (int i = 0; i < 10; i++) {
+            int span = 3000;
+            threadPoolExecutor.execute(new ConcurrentReadAndWriteTask(i,span));
+        }
+        threadPoolExecutor.shutdown();
+        try {
+            boolean loop = true;
+            do {
+                loop = !threadPoolExecutor.awaitTermination(2, TimeUnit.SECONDS);
+            } while(loop);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private class ConcurrentReadAndWriteTask implements Runnable {
+
+        int index;
+        int span;
+
+        public ConcurrentReadAndWriteTask(int index, int span) {
+            this.index = index;
+            this.span = span;
+        }
+
+        @Override
+        public void run() {
+            int begin = index * span;
+            int end = (index + 1) * span;
+            while (begin < end) {
+                clientWithSentinel.set("key" + begin, "value" + begin);
+                System.out.println("set key:" + begin + ",and value:" + begin);
+                clientWithSentinel.get("key" + begin);
+                System.out.println("get key:" + begin + ",and value:" + begin);
+                begin ++ ;
+            }
+        }
+    }
 }

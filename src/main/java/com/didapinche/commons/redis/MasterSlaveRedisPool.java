@@ -7,9 +7,11 @@ import org.springframework.util.CollectionUtils;
 import redis.clients.jedis.*;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * 单主多从的资源池
@@ -40,7 +42,7 @@ public class MasterSlaveRedisPool implements RedisPool<Jedis>, InitializingBean 
     /**
      * slave 池映射表
      */
-    private Map<HostAndPort, JedisPool> slaveJedisPoolMap;
+    private ConcurrentHashMap<HostAndPort, JedisPool> slaveJedisPoolMap;
 
     private Random randomSlaveIndex = new Random();
 
@@ -72,6 +74,8 @@ public class MasterSlaveRedisPool implements RedisPool<Jedis>, InitializingBean 
 
     @Override
     public void initMasterPool() {
+        if (masterJedisPool != null)
+            masterJedisPool.close();
         masterJedisPool = new JedisPool(jedisPoolConfig, masterHap.getHost(), masterHap.getPort(), timeout, passWord);
     }
 
@@ -83,6 +87,7 @@ public class MasterSlaveRedisPool implements RedisPool<Jedis>, InitializingBean 
         if (CollectionUtils.isEmpty(slaveJedisPoolMap))
             slaveJedisPoolMap = new ConcurrentHashMap<>();
         else {
+            //防止连接泄露
             for (JedisPool slaveJedisPool : slaveJedisPoolMap.values()) {
                 slaveJedisPool.close();
             }
@@ -97,7 +102,7 @@ public class MasterSlaveRedisPool implements RedisPool<Jedis>, InitializingBean 
 
     @Override
     public boolean hasSlave() {
-        return !CollectionUtils.isEmpty(slaveJedisPoolMap);
+        return !(CollectionUtils.isEmpty(slaveHaps) || CollectionUtils.isEmpty(slaveJedisPoolMap));
     }
 
     @Override
@@ -112,8 +117,13 @@ public class MasterSlaveRedisPool implements RedisPool<Jedis>, InitializingBean 
 
     @Override
     public void sdownSlave(String masterName, HostAndPort hostAndPort) {
-        slaveHaps.remove(hostAndPort);
-        removeSlavePoolPartly(hostAndPort);
+        boolean isAboutToDown;
+        //串行化slave配置列表删除动作，结合retry机制 可切换到可用服务
+        synchronized (this) {
+            isAboutToDown = slaveHaps.remove(hostAndPort);
+        }
+            if (isAboutToDown)
+                removeSlavePoolPartly(hostAndPort);
     }
 
     /**
@@ -121,7 +131,10 @@ public class MasterSlaveRedisPool implements RedisPool<Jedis>, InitializingBean 
      * @param hostAndPort
      */
     private void removeSlavePoolPartly(HostAndPort hostAndPort){
-        slaveJedisPoolMap.remove(hostAndPort);
+        JedisPool downSlavePool = slaveJedisPoolMap.remove(hostAndPort);
+        //防止连接泄露
+        if (downSlavePool != null)
+            downSlavePool.close();
     }
 
     @Override
@@ -178,7 +191,6 @@ public class MasterSlaveRedisPool implements RedisPool<Jedis>, InitializingBean 
     public void setJedisPoolConfig(JedisPoolConfig jedisPoolConfig) {
         this.jedisPoolConfig = jedisPoolConfig;
     }
-
 
     public JedisPoolConfig getJedisPoolConfig() {
         return jedisPoolConfig;

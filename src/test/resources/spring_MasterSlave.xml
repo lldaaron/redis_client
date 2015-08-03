@@ -43,7 +43,6 @@
     <!--sentinel-->
 
 
-
     <bean id="masterSlaveRedisPoolWithSentinel" class="com.didapinche.commons.redis.MasterSlaveRedisPool">
         <property name="jedisPoolConfig" ref="jedisPoolConfig"></property>
     </bean>
@@ -53,11 +52,12 @@
         <property name="pool" ref="masterSlaveRedisPoolWithSentinel"></property>
     </bean>
 
-    <bean id ="sentinelsManager" class="com.didapinche.commons.redis.sentinel.SentinelsManager" lazy-init="true">
+    <bean id="sentinelsManager" class="com.didapinche.commons.redis.sentinel.SentinelsManager" lazy-init="true"
+          destroy-method="shutdownSentinels">
         <property name="reidsPool" ref="masterSlaveRedisPoolWithSentinel"></property>
         <property name="sentinelInfo">
             <bean class="com.didapinche.commons.redis.sentinel.SentinelInfo">
-                <property name="masterNames" >
+                <property name="masterNames">
                     <list>
                         <value>master1</value>
                     </list>
@@ -71,16 +71,27 @@
                 </property>
 
                 <property name="weight" value="1"></property>
-                <property name="password" value="" ></property>
+                <property name="password" value=""></property>
             </bean>
         </property>
     </bean>
 
-    <bean id="sentinelJedis" class="redis.clients.jedis.Jedis" lazy-init="true">
+    <!--sentinel-->
+    <bean id="sentinelJedis" class="redis.clients.jedis.Jedis" lazy-init="true" destroy-method="close">
         <constructor-arg name="host" value="127.0.0.1"/>
         <constructor-arg name="port" value="26379"/>
     </bean>
 
+    <!--slave-->
+    <bean id="slaveJedis80" class="redis.clients.jedis.Jedis" lazy-init="true" destroy-method="close">
+        <constructor-arg name="host" value="127.0.0.1"/>
+        <constructor-arg name="port" value="6380"/>
+    </bean>
+    <!--slave-->
+    <bean id="slaveJedis81" class="redis.clients.jedis.Jedis" lazy-init="true" destroy-method="close">
+        <constructor-arg name="host" value="127.0.0.1"/>
+        <constructor-arg name="port" value="6381"/>
+    </bean>
 
 
 </beans>
