@@ -5,24 +5,22 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.util.CollectionUtils;
 import redis.clients.jedis.*;
+import redis.clients.jedis.exceptions.JedisDataException;
 
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * 单主多从的资源池
- *
+ * <p/>
  * 注意：如果要设置密码 master slave 的密码必须要设置成一样，否则sentinel调度会混乱
  * 默认db index：0
- *
+ * <p/>
  * File Created at 2015-7-28 by fengbin
- *
+ * <p/>
  * Copyright 2015 didapinche.com
- *
+ * <p/>
  * modified at 15/7/30 by 罗立东 rod
  */
 public class MasterSlaveRedisPool implements RedisPool<Jedis>, InitializingBean {
@@ -84,7 +82,7 @@ public class MasterSlaveRedisPool implements RedisPool<Jedis>, InitializingBean 
         if (CollectionUtils.isEmpty(slaveHaps))
             return;
 
-        if (CollectionUtils.isEmpty(slaveJedisPoolMap))
+        if (slaveJedisPoolMap == null)
             slaveJedisPoolMap = new ConcurrentHashMap<>();
         else {
             //防止连接泄露
@@ -116,21 +114,20 @@ public class MasterSlaveRedisPool implements RedisPool<Jedis>, InitializingBean 
 
 
     @Override
-    public void sdownSlave(String masterName, HostAndPort hostAndPort) {
-        boolean isAboutToDown;
+    public synchronized void sdownSlave(String masterName, HostAndPort hostAndPort) {
         //串行化slave配置列表删除动作，结合retry机制 可切换到可用服务
-        synchronized (this) {
-            isAboutToDown = slaveHaps.remove(hostAndPort);
-        }
-            if (isAboutToDown)
-                removeSlavePoolPartly(hostAndPort);
+        //下线 先改配置 再改池子
+        boolean isAboutToDown = slaveHaps.remove(hostAndPort);
+        if (isAboutToDown)
+            removeSlavePoolPartly(hostAndPort);
     }
 
     /**
      * 无需重新初始化，移除下线的slave pool
+     *
      * @param hostAndPort
      */
-    private void removeSlavePoolPartly(HostAndPort hostAndPort){
+    private void removeSlavePoolPartly(HostAndPort hostAndPort) {
         JedisPool downSlavePool = slaveJedisPoolMap.remove(hostAndPort);
         //防止连接泄露
         if (downSlavePool != null)
@@ -138,17 +135,36 @@ public class MasterSlaveRedisPool implements RedisPool<Jedis>, InitializingBean 
     }
 
     @Override
-    public void nsdownSlave(String masterName, HostAndPort hostAndPort) {
-        slaveHaps.add(hostAndPort);
-        addSlavePoolPartly(hostAndPort);
+    public synchronized void nsdownSlave(String masterName, HostAndPort hostAndPort) {
+        boolean isAboutToUp = !slaveHaps.contains(hostAndPort);
+        if (isAboutToUp) { //上线 先改池子再改配置
+            JedisPool slaveJedisPool = addSlavePoolPartly(hostAndPort);
+            //等待redis 加载数据
+            Jedis decideJedis = slaveJedisPool.getResource();
+            while (true) {
+                try {
+                    decideJedis.randomKey();
+                    break;
+                } catch (JedisDataException e) {
+                    logger.error(e.getMessage());
+                }
+            }
+            decideJedis.close();
+
+            slaveHaps.add(hostAndPort);
+        }
     }
 
     /**
-     * 无需重新初始化，增加上线的slave pool
+     * 无需重新初始化，增加上线的slave pool,并返回一个连接池
+     *
      * @param hostAndPort
      */
-    private void addSlavePoolPartly(HostAndPort hostAndPort) {
+    private JedisPool addSlavePoolPartly(HostAndPort hostAndPort) {
+        if (slaveJedisPoolMap == null)
+            slaveJedisPoolMap = new ConcurrentHashMap<>();
         slaveJedisPoolMap.put(hostAndPort, new JedisPool(jedisPoolConfig, hostAndPort.getHost(), hostAndPort.getPort(), timeout, passWord));
+        return slaveJedisPoolMap.get(hostAndPort);
     }
 
     @Override

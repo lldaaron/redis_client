@@ -98,6 +98,7 @@ public class MasterSlaveRedisTest extends RedisTestBase {
 
     /**
      * 在读写的情况下 slave下线
+     * 测试时，请确保master和slave的上线状态。
      */
     @Test
     public void testHAsdownSlaveWhenReadAndWrite() throws InterruptedException {
@@ -114,7 +115,7 @@ public class MasterSlaveRedisTest extends RedisTestBase {
             @Override
             public void run() {
                 try {
-                    Thread.sleep(2 * 1000L);
+                    Thread.sleep(1 * 1000L);
                     slaveJedis80.shutdown();
                     logger.info("shutdown the slave 80");
                     Thread.sleep(1 * 1000L);
@@ -131,7 +132,7 @@ public class MasterSlaveRedisTest extends RedisTestBase {
         ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(10);
 
         for (int i = 0; i < 10; i++) {
-            int span = 3000;
+            int span = 8000;
             threadPoolExecutor.execute(new ConcurrentReadAndWriteTask(i,span));
         }
         threadPoolExecutor.shutdown();
@@ -160,12 +161,64 @@ public class MasterSlaveRedisTest extends RedisTestBase {
             int begin = index * span;
             int end = (index + 1) * span;
             while (begin < end) {
+                if (Thread.currentThread().isInterrupted())
+                    break;
                 clientWithSentinel.set("key" + begin, "value" + begin);
-                System.out.println("set key:" + begin + ",and value:" + begin);
+//                System.out.println("set key:" + begin + ",and value:" + begin);
                 clientWithSentinel.get("key" + begin);
-                System.out.println("get key:" + begin + ",and value:" + begin);
+//                System.out.println("get key:" + begin + ",and value:" + begin);
                 begin ++ ;
             }
+        }
+    }
+
+    /**
+     * 在读写的情况下 slave上线
+     * 测试时，请保证master的上线状态 和 slave的下线状态
+     */
+    @Test
+    public void testHAnsdownSlaveWhenReadAndWrite() throws InterruptedException {
+
+        //初始化sentinelsManager
+        applicationContext.getBean("sentinelsManager");
+
+        //wait to conf
+        Thread.sleep(1000);
+
+        //begin read and write
+
+        ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(10);
+
+        for (int i = 0; i < 10; i++) {
+            int span = 200000;
+            threadPoolExecutor.execute(new ConcurrentReadAndWriteTask(i,span));
+        }
+
+
+        MasterSlaveRedisPool pool = clientWithSentinel.getPool();
+
+        Assert.assertFalse(pool.hasSlave());
+
+        System.out.println("请上线一台slave");
+        Thread.sleep(15000);
+
+        Assert.assertTrue(pool.hasSlave());
+        Assert.assertEquals(pool.getSlaveHaps().size(),1);
+
+        System.out.println("请继续上线一台slave");
+        Thread.sleep(15000);
+
+        Assert.assertEquals(pool.getSlaveHaps().size(),2);
+
+        threadPoolExecutor.shutdownNow();
+
+        try {
+            boolean loop = true;
+            do {
+                loop = !threadPoolExecutor.awaitTermination(2, TimeUnit.SECONDS);
+            } while(loop);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
     }
 }
