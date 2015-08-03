@@ -130,20 +130,15 @@ public class MasterListener implements Runnable {
             if (channel.equals(S_DOWN)) {
                 if (!masterNames.contains(messageArray[5])) {
                     logger.info("Ignoring message on " + S_DOWN + " for master name " + messageArray[5] + ".");
-                    return;
                 } else if (messageArray[0].equals("master")) {
                     return;//master下线，忽略 ,等待+switch-master
                 } else { //从机下线
                     HostAndPort downSlave = Utils.toHostAndPort(Arrays.asList(messageArray[2], messageArray[3]));
                     sentinelActor.sdownSlave(messageArray[5], downSlave);
                 }
-
-            }
-
-            if (channel.equals(N_S_DOWN)) {
+            } else if (channel.equals(N_S_DOWN)) {
                 if (!masterNames.contains(messageArray[5])) {
                     logger.info("Ignoring message on " + N_S_DOWN + " for master name " + messageArray[5] + ".");
-                    return;
                 } else if (messageArray[0].equals("master")) {
                     return;//master上线，忽略 ,等待+switch-master （应该不会发生。。。）
                 } else { //从机上线
@@ -151,10 +146,7 @@ public class MasterListener implements Runnable {
                     sentinelActor.nsdownSlave(messageArray[5], nDownSlave);
                 }
 
-            }
-
-            // switch master
-            if (messageArray.length > 3) {
+            } else if (channel.equals(SWITCH_MASTER) && messageArray.length > 3) {
                 if (masterNames.contains(messageArray[0])) {
                     HostAndPort newMaster = Utils.toHostAndPort(Arrays.asList(messageArray[3], messageArray[4]));
                     sentinelActor.switchMaster(messageArray[0], newMaster);
@@ -166,6 +158,5 @@ public class MasterListener implements Runnable {
                         + " on channel +switch-master: " + message);
             }
         }
-
     }
 }
