@@ -128,13 +128,15 @@ public class MasterListener implements Runnable {
             String[] messageArray = message.split(" ");
 
             if (channel.equals(S_DOWN)) {
-                if (!masterNames.contains(messageArray[5])) {
-                    logger.info("Ignoring message on " + S_DOWN + " for master name " + messageArray[5] + ".");
-                } else if (messageArray[0].equals("master")) {
+                if (messageArray[0].equals("master")) {
                     return;//master下线，忽略 ,等待+switch-master
-                } else { //从机下线
-                    HostAndPort downSlave = Utils.toHostAndPort(Arrays.asList(messageArray[2], messageArray[3]));
-                    sentinelActor.sdownSlave(messageArray[5], downSlave);
+                } else {
+                    if (!masterNames.contains(messageArray[5])) {
+                        logger.info("Ignoring message on " + S_DOWN + " for master name " + messageArray[5] + ".");
+                    }  else { //从机下线
+                        HostAndPort downSlave = Utils.toHostAndPort(Arrays.asList(messageArray[2], messageArray[3]));
+                        sentinelActor.sdownSlave(messageArray[5], downSlave);
+                    }
                 }
             } else if (channel.equals(N_S_DOWN)) {
                 if (!masterNames.contains(messageArray[5])) {

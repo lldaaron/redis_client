@@ -64,6 +64,8 @@ public class MasterSlaveRedisPool implements RedisPool<Jedis>, InitializingBean 
      */
     private List<HostAndPort> slaveHaps;
 
+    private Object masterLock = new Object();
+
     @Override
     public void initPool() {
         initMasterPool();
@@ -72,13 +74,15 @@ public class MasterSlaveRedisPool implements RedisPool<Jedis>, InitializingBean 
 
     @Override
     public void initMasterPool() {
-        if (masterJedisPool != null)
-            masterJedisPool.close();
-        masterJedisPool = new JedisPool(jedisPoolConfig, masterHap.getHost(), masterHap.getPort(), timeout, passWord);
+        synchronized (masterLock) {
+            if (masterJedisPool != null)
+                masterJedisPool.close();
+            masterJedisPool = new JedisPool(jedisPoolConfig, masterHap.getHost(), masterHap.getPort(), timeout, passWord);
+        }
     }
 
     @Override
-    public void initSlavePool() {
+    public synchronized void initSlavePool() {
         if (CollectionUtils.isEmpty(slaveHaps))
             return;
 

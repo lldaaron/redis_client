@@ -8,6 +8,7 @@ import org.springframework.test.context.ContextConfiguration;
 import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.Jedis;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
@@ -220,5 +221,34 @@ public class MasterSlaveRedisTest extends RedisTestBase {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+    }
+
+    /**
+     * 主备切换
+     */
+    @Test
+    public void testSwitchMaster() throws InterruptedException {
+        //初始化sentinelsManager
+        applicationContext.getBean("sentinelsManager");
+
+        //wait to conf
+        Thread.sleep(1000);
+
+        HostAndPort beforeMasterHap = clientWithSentinel.getPool().getMasterHap();
+        List<HostAndPort> beforeSlaveHaps = new ArrayList<>(clientWithSentinel.getPool().getSlaveHaps());
+
+        Jedis beforeMasterJedis = new Jedis(beforeMasterHap.getHost(), beforeMasterHap.getPort());
+        beforeMasterJedis.shutdown();
+
+        //wait reconf
+        Thread.sleep(10000);
+        HostAndPort afterMasterHap = clientWithSentinel.getPool().getMasterHap();
+        List<HostAndPort> afterSlaveHaps = clientWithSentinel.getPool().getSlaveHaps();
+
+        //切换后的master是切换前的slave中的一个
+        Assert.assertTrue(beforeSlaveHaps.contains(afterMasterHap));
+
+        //切换后的的slave比切换前少一
+        Assert.assertEquals(beforeSlaveHaps.size(), afterSlaveHaps.size() + 1);
     }
 }
